@@ -290,7 +290,8 @@ The Device Admin policy page was not read in full. Recheck it at step 9 before i
 
 | Step | Date | Build | Install | Logcat | Phone check | Commit |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0 | 5 Nov 2026 | n/a | n/a | n/a | Waiting for Nor to read the docs | pending |
+| 0 | 5 Nov 2026 | n/a | n/a | n/a | You read the docs and said OK | 70d5ea0 |
+| 1 | 6 Nov 2026 | `bash ./gradlew assembleDebug` BUILD SUCCESSFUL | `adb install -r` Success, then Success again on the skill run | Empty for `AndroidRuntime:E Guardian:V` | Cold start: force-stop, `am start` fresh instance pid 25746, `mCurrentFocus` and `mFocusedApp` name the Guardian MainActivity, hello text confirmation open for Nor | fa4c72e |
 
 ## Appendix B. Questions for `/architect`
 
