@@ -2,9 +2,9 @@
 
 Guardian is a parental control app for Android. Version 1 runs on the child's phone. The parent sets it up and protects every setting with a PIN. Rules and usage stay on the phone. There is no Guardian account, server, ads, or analytics.
 
-Working name: Guardian. Package: `com.nordev.guardian`. `minSdk 26`. `compileSdk 36`. `targetSdk 36`.
+Working name: Guardian. Package: `com.nordev.guardian`. `minSdk 26`. `compileSdk 37`. `targetSdk 36`.
 
-The brief said `targetSdk 34`. A new app with target 34 cannot be published. Since 31 August 2026, Google Play accepts only new apps and updates that target Android 16 (API 36). Step 1 installs platform 36 and build-tools 36. The app still runs on Android 8.0 and newer.
+The brief said `targetSdk 34`. A new app with target 34 cannot be published. Since 31 August 2026, Google Play accepts only new apps and updates that target Android 16 (API 36). Step 1 installs platform 36 and build-tools 36. The app still runs on Android 8.0 and newer. Step 2 raised `compileSdk` to 37 because Compose 1.12.1 (BOM 2026.09.00) requires it; `targetSdk` stays 36 for Play.
 
 ## What version 1 does
 
@@ -292,6 +292,7 @@ The Device Admin policy page was not read in full. Recheck it at step 9 before i
 | --- | --- | --- | --- | --- | --- | --- |
 | 0 | 5 Nov 2026 | n/a | n/a | n/a | You read the docs and said OK | 70d5ea0 |
 | 1 | 6 Nov 2026 | `bash ./gradlew assembleDebug` BUILD SUCCESSFUL | `adb install -r` Success, then Success again on the skill run | Empty for `AndroidRuntime:E Guardian:V` | Cold start: force-stop, `am start` fresh instance pid 25746, `mCurrentFocus` and `mFocusedApp` name the Guardian MainActivity, hello text confirmation open for Nor | 0c04565 |
+| 2 | 6 Nov 2026 | `bash ./gradlew assembleDebug` BUILD SUCCESSFUL | `adb install -r` Success | Empty for `AndroidRuntime:E Guardian:V` after cold launch and the full route drive; the only process death was `am_kill ... remove task`, not a crash | Phone drive: status → gate → 5 onboarding steps → consent error and checkbox state → Done → status → gate wrong PIN → correct PIN → all four parent tabs → Settings privacy dialog → Dark then System theme; consent and theme rows expose checked state | b992dc2 |
 
 ## Appendix B. Questions for `/architect`
 
