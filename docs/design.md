@@ -395,7 +395,7 @@ Layout:
 States:
 
 - Wrong PIN. The field clears, focus returns to the field, and an inline error appears. Copy "That PIN is not correct. Try again." Announce it through a live region. A short shake runs only when animations are enabled.
-- Lockout. The field and button are disabled. Copy "Too many tries. Try again in 1 minute." with a visible countdown that updates once per second. TalkBack announces the wait at 30 seconds, 10 seconds, and the end, not every second. Do not reveal how many attempts remain.
+- Lockout. The field and button are disabled. Copy "Too many tries. Try again in 60 seconds." with a visible countdown that updates once per second and counts down to zero. TalkBack announces the wait at 30 seconds, 10 seconds, and the end, not every second. Do not reveal how many attempts remain.
 - Session locked. Title "Guardian is locked", body "Enter your PIN to continue where you left off." The previous screen stays hidden behind the gate.
 - Session warning. At 30 seconds before the idle lock, show a snackbar "Guardian will lock in 30 seconds." Any tap or keypress extends the session. Do not use a modal.
 - First run. If no PIN exists, route to onboarding instead of showing the gate.
