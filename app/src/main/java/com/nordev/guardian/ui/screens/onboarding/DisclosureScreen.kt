@@ -79,8 +79,9 @@ enum class DisclosureType(
     ),
 }
 
-// The named action launches no system screen in this step; it only records
-// consent by returning to the permissions step. Step 4 wires the system intent.
+// The named action launches no system screen in this step; it records consent
+// and returns to the permissions step. The build note says so on screen. Step 4
+// wires the real system intent and restores the action labels.
 @Composable
 fun DisclosureScreen(
     type: DisclosureType,
@@ -134,6 +135,12 @@ fun DisclosureScreen(
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                 )
             }
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.disclosure_build_note),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Spacer(Modifier.height(16.dp))
         }
         StickyActionBar(

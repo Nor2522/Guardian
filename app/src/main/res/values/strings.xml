@@ -58,6 +58,7 @@
     <!-- Step 4 Permissions -->
     <string name="onboarding_permissions_title">Turn on protection</string>
     <string name="onboarding_permissions_body">Android asks for each permission separately. You can skip a check and finish it later. That check stays off until you return.</string>
+    <string name="onboarding_permissions_build_note">Permission setup is not available in this build yet. Tapping Set up opens an explanation. The Android permission screen comes in a later step.</string>
     <string name="permission_state_off">Off</string>
     <string name="permission_set_up">Set up</string>
     <string name="onboarding_finish_later">Finish later</string>
@@ -90,13 +91,14 @@
     <string name="disclosure_accessibility_body">Guardian uses Accessibility to notice which app is open. When a limit or schedule applies, Guardian shows a pause screen instead. Guardian does not read text on the screen, watch taps, type for you, or control other apps. You can turn this off at any time in Android Settings.</string>
     <string name="disclosure_vpn_body">Guardian uses a local VPN to check website domain names against its block list. The check happens on this phone. Guardian does not send your browsing to a Guardian server. Allowed domain lookups go to your network\'s DNS resolver. Guardian does not inspect page content and does not hide your IP address. Android shows a VPN key while the filter runs.</string>
     <string name="disclosure_admin_body">Guardian uses Device Admin so the app cannot be uninstalled without your PIN. It does not wipe the phone, lock the screen, or change your password. You can remove Guardian later with your PIN.</string>
-    <string name="disclosure_consent">I understand what this permission does and I want to turn it on.</string>
+    <string name="disclosure_consent">I understand what this permission does.</string>
     <string name="disclosure_consent_needed">Tick the checkbox above first.</string>
-    <string name="disclosure_action_usage">Open Usage access settings</string>
-    <string name="disclosure_action_notifications">Allow notifications</string>
-    <string name="disclosure_action_accessibility">Open Accessibility settings</string>
-    <string name="disclosure_action_vpn">Turn on the website filter</string>
-    <string name="disclosure_action_admin">Turn on uninstall protection</string>
+    <string name="disclosure_build_note">This build records your choice only. It does not open Android settings yet. Permission setup comes in a later step.</string>
+    <string name="disclosure_action_usage">I understand</string>
+    <string name="disclosure_action_notifications">I understand</string>
+    <string name="disclosure_action_accessibility">I understand</string>
+    <string name="disclosure_action_vpn">I understand</string>
+    <string name="disclosure_action_admin">I understand</string>
     <string name="disclosure_not_now">Not now</string>
 
     <!-- Parent tabs -->

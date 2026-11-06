@@ -65,6 +65,12 @@ fun PermissionsScreen(
             text = stringResource(R.string.onboarding_permissions_body),
             style = MaterialTheme.typography.bodyLarge,
         )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = stringResource(R.string.onboarding_permissions_build_note),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Spacer(Modifier.height(24.dp))
         PermissionCard(
             icon = Icons.Outlined.Timelapse,
