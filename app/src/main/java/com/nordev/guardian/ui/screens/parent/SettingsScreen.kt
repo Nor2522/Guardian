@@ -99,6 +99,30 @@ fun SettingsScreen(
             }
             Spacer(Modifier.height(24.dp))
             SectionHeader(
+                title = stringResource(R.string.settings_data),
+                modifier = Modifier.semantics { heading() },
+            )
+            Card(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_data_storage),
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.settings_data_reinstall),
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Spacer(Modifier.height(24.dp))
+            SectionHeader(
                 title = stringResource(R.string.settings_section_about),
                 modifier = Modifier.semantics { heading() },
             )

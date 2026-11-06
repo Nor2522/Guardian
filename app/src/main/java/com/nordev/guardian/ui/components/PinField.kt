@@ -38,6 +38,7 @@ fun PinField(
     label: String = stringResource(R.string.pin_field_cd),
     isError: Boolean = false,
     errorMessage: String? = null,
+    enabled: Boolean = true,
 ) {
     val digitCount = 6
     val stateText = stringResource(R.string.gate_pin_state, value.length)
@@ -50,6 +51,7 @@ fun PinField(
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
             isError = isError,
+            enabled = enabled,
             supportingText = if (isError && errorMessage != null) {
                 {
                     Text(

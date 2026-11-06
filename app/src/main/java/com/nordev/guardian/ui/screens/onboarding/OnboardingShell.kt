@@ -28,6 +28,7 @@ internal fun OnboardingShell(
     onBack: () -> Unit,
     primaryLabel: String,
     onPrimary: () -> Unit,
+    primaryEnabled: Boolean = true,
     secondaryLabel: String? = null,
     onSecondary: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
@@ -57,6 +58,7 @@ internal fun OnboardingShell(
         StickyActionBar(
             primaryLabel = primaryLabel,
             onPrimary = onPrimary,
+            primaryEnabled = primaryEnabled,
             secondaryLabel = secondaryLabel,
             onSecondary = onSecondary,
         )

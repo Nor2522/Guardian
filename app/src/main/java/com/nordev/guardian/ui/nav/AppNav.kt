@@ -1,16 +1,27 @@
 package com.nordev.guardian.ui.nav
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.nordev.guardian.data.prefs.ParentPinRepository
 import com.nordev.guardian.ui.screens.gate.GateScreen
 import com.nordev.guardian.ui.screens.onboarding.DisclosureScreen
 import com.nordev.guardian.ui.screens.onboarding.DisclosureType
@@ -21,8 +32,9 @@ import com.nordev.guardian.ui.screens.onboarding.PrivacyScreen
 import com.nordev.guardian.ui.screens.onboarding.WelcomeScreen
 import com.nordev.guardian.ui.screens.parent.ParentScaffold
 import com.nordev.guardian.ui.screens.status.StatusScreen
+import kotlinx.coroutines.delay
 
-// In-memory only this step; persistence arrives at Step 3.
+// Theme is still in-memory; only the parent PIN persists in this step.
 enum class ThemeMode { System, Light, Dark }
 
 object Routes {
@@ -51,85 +63,135 @@ object Routes {
 fun GuardianNavHost(
     themeMode: ThemeMode,
     onThemeChange: (ThemeMode) -> Unit,
+    onSecureChange: (Boolean) -> Unit = {},
 ) {
     val navController = rememberNavController()
-    // In memory only: process death clears it, and Step 3 replaces it with a
-    // hashed preference. Never written to saved state or logs.
-    var parentPin by remember { mutableStateOf<String?>(null) }
-    NavHost(navController = navController, startDestination = Routes.STATUS) {
-        composable(Routes.STATUS) {
-            StatusScreen(onOpenGate = { navController.navigate(Routes.GATE) })
+    val context = LocalContext.current
+    val repository = remember(context) { ParentPinRepository(context) }
+    val session = viewModel<ParentSessionViewModel>().session
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    val isParentRoute = currentRoute?.startsWith(Routes.PARENT) == true
+
+    // Background, screen off, and recents all stop the activity; that lock is
+    // separate from the five idle minutes counted below.
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) session.lock()
         }
-        composable(Routes.GATE) {
-            GateScreen(
-                storedPin = parentPin,
-                onExitToOnboardingWelcome = {
-                    navController.navigate(Routes.ONBOARDING_WELCOME) {
-                        popUpTo(Routes.GATE) { inclusive = true }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Back-stack guard: a restored parent route never shows without an unlock.
+    LaunchedEffect(currentRoute, session.isUnlocked) {
+        if (isParentRoute && !session.isUnlocked) {
+            navController.navigate(Routes.GATE) {
+                popUpTo(Routes.PARENT) { inclusive = true }
+            }
+        }
+    }
+
+    LaunchedEffect(session.isUnlocked) {
+        while (session.isUnlocked) {
+            delay(1_000)
+            if (session.expired()) session.lock()
+        }
+    }
+
+    LaunchedEffect(isParentRoute) {
+        onSecureChange(isParentRoute)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        awaitPointerEvent()
+                        session.touch()
                     }
-                },
-                onUnlocked = {
-                    navController.navigate(Routes.PARENT) {
-                        popUpTo(Routes.GATE) { inclusive = true }
-                    }
-                },
-            )
-        }
-        composable(Routes.ONBOARDING_WELCOME) {
-            WelcomeScreen(
-                onBack = { navController.popBackStack() },
-                onGetStarted = { navController.navigate(Routes.ONBOARDING_PRIVACY) },
-            )
-        }
-        composable(Routes.ONBOARDING_PRIVACY) {
-            PrivacyScreen(
-                onBack = { navController.popBackStack() },
-                onIUnderstand = { navController.navigate(Routes.ONBOARDING_PIN) },
-            )
-        }
-        composable(Routes.ONBOARDING_PIN) {
-            PinScreen(
-                onBack = { navController.popBackStack() },
-                onPinSet = { parentPin = it },
-                onContinue = { navController.navigate(Routes.ONBOARDING_PERMISSIONS) },
-            )
-        }
-        composable(Routes.ONBOARDING_PERMISSIONS) {
-            PermissionsScreen(
-                onBack = { navController.popBackStack() },
-                onOpenDisclosure = { type -> navController.navigate(Routes.disclosureRoute(type)) },
-                onContinue = { navController.navigate(Routes.ONBOARDING_DONE) },
-                onFinishLater = {
-                    navController.navigate(Routes.STATUS) {
-                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
-                    }
-                },
-            )
-        }
-        composable(
-            Routes.ONBOARDING_DISCLOSURE,
-            arguments = listOf(navArgument("type") { type = NavType.StringType }),
-        ) { entry ->
-            val typeName = entry.arguments?.getString("type").orEmpty()
-            DisclosureScreen(
-                type = Routes.disclosureTypeFrom(typeName),
-                onBack = { navController.popBackStack() },
-                onConsented = { navController.popBackStack() },
-            )
-        }
-        composable(Routes.ONBOARDING_DONE) {
-            DoneScreen(
-                onBack = { navController.popBackStack() },
-                onFinishSetup = { navController.popBackStack() },
-                onOpenStatus = {
-                    navController.navigate(Routes.STATUS) {
-                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
-                    }
-                },
-            )
-        }
-        composable(Routes.PARENT) {
-            ParentScaffold(themeMode = themeMode, onThemeChange = onThemeChange)
+                }
+            },
+    ) {
+        NavHost(navController = navController, startDestination = Routes.STATUS) {
+            composable(Routes.STATUS) {
+                StatusScreen(onOpenGate = { navController.navigate(Routes.GATE) })
+            }
+            composable(Routes.GATE) {
+                GateScreen(
+                    repository = repository,
+                    onExitToOnboardingWelcome = {
+                        navController.navigate(Routes.ONBOARDING_WELCOME) {
+                            popUpTo(Routes.GATE) { inclusive = true }
+                        }
+                    },
+                    onUnlocked = {
+                        session.unlock()
+                        navController.navigate(Routes.PARENT) {
+                            popUpTo(Routes.GATE) { inclusive = true }
+                        }
+                    },
+                )
+            }
+            composable(Routes.ONBOARDING_WELCOME) {
+                WelcomeScreen(
+                    onBack = { navController.popBackStack() },
+                    onGetStarted = { navController.navigate(Routes.ONBOARDING_PRIVACY) },
+                )
+            }
+            composable(Routes.ONBOARDING_PRIVACY) {
+                PrivacyScreen(
+                    onBack = { navController.popBackStack() },
+                    onIUnderstand = { navController.navigate(Routes.ONBOARDING_PIN) },
+                )
+            }
+            composable(Routes.ONBOARDING_PIN) {
+                PinScreen(
+                    onBack = { navController.popBackStack() },
+                    repository = repository,
+                    onContinue = { navController.navigate(Routes.ONBOARDING_PERMISSIONS) },
+                )
+            }
+            composable(Routes.ONBOARDING_PERMISSIONS) {
+                PermissionsScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenDisclosure = { type -> navController.navigate(Routes.disclosureRoute(type)) },
+                    onContinue = { navController.navigate(Routes.ONBOARDING_DONE) },
+                    onFinishLater = {
+                        navController.navigate(Routes.STATUS) {
+                            popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                        }
+                    },
+                )
+            }
+            composable(
+                Routes.ONBOARDING_DISCLOSURE,
+                arguments = listOf(navArgument("type") { type = NavType.StringType }),
+            ) { entry ->
+                val typeName = entry.arguments?.getString("type").orEmpty()
+                DisclosureScreen(
+                    type = Routes.disclosureTypeFrom(typeName),
+                    onBack = { navController.popBackStack() },
+                    onConsented = { navController.popBackStack() },
+                )
+            }
+            composable(Routes.ONBOARDING_DONE) {
+                DoneScreen(
+                    onBack = { navController.popBackStack() },
+                    onFinishSetup = { navController.popBackStack() },
+                    onOpenStatus = {
+                        navController.navigate(Routes.STATUS) {
+                            popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                        }
+                    },
+                )
+            }
+            composable(Routes.PARENT) {
+                ParentScaffold(themeMode = themeMode, onThemeChange = onThemeChange)
+            }
         }
     }
 }

@@ -22,6 +22,8 @@
     <string name="gate_footer">Guardian locks after 5 minutes.</string>
     <string name="gate_pin_state">PIN, %1$d of 6 digits entered</string>
     <string name="gate_error_wrong">That PIN is not correct. Try again.</string>
+    <string name="gate_checking">Checking…</string>
+    <string name="gate_locked">Too many tries. Try again in %1$d seconds.</string>
     <string name="pin_field_cd">PIN</string>
 
     <!-- Onboarding shell -->
@@ -53,6 +55,9 @@
     <string name="onboarding_pin_mismatch">The PINs do not match.</string>
     <string name="onboarding_pin_enter_six">Enter all six digits.</string>
     <string name="onboarding_pin_no_reset">There is no PIN reset in this version. Keep this PIN somewhere safe.</string>
+    <string name="onboarding_pin_reinstall">Uninstalling Guardian or clearing app data deletes the PIN and all rules. Uninstall protection comes in a later step.</string>
+    <string name="onboarding_pin_saving">Saving…</string>
+    <string name="onboarding_pin_save_error">Could not save the PIN. Try again.</string>
     <string name="onboarding_continue">Continue</string>
 
     <!-- Step 4 Permissions -->
@@ -142,6 +147,9 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="settings_privacy">Privacy policy</string>
+    <string name="settings_data">Data on this phone</string>
+    <string name="settings_data_storage">Your PIN is saved as a salted hash, not as digits. It stays after a restart.</string>
+    <string name="settings_data_reinstall">Uninstalling Guardian or clearing app data deletes the PIN and every rule. There is no cloud backup and no PIN reset in this version. Uninstall protection comes in a later step.</string>
     <string name="settings_section_about">About</string>
     <string name="settings_version">Version</string>
     <string name="settings_version_value">0.1.0</string>

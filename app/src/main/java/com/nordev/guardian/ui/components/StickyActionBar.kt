@@ -22,6 +22,7 @@ fun StickyActionBar(
     primaryLabel: String,
     onPrimary: () -> Unit,
     modifier: Modifier = Modifier,
+    primaryEnabled: Boolean = true,
     secondaryLabel: String? = null,
     onSecondary: (() -> Unit)? = null,
 ) {
@@ -33,6 +34,7 @@ fun StickyActionBar(
     ) {
         Button(
             onClick = onPrimary,
+            enabled = primaryEnabled,
             shape = MaterialTheme.shapes.extraLarge,
             modifier = Modifier
                 .fillMaxWidth()
