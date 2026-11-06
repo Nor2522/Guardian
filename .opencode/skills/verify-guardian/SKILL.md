@@ -58,7 +58,7 @@ Meaning: phone attached and authorized, package installed (a `package:` path pri
 
 ## Drive
 
-Guardian has no browser or CLI surface. From Step 1 to the present, every check is an adb probe; Compose interaction via `adb shell input` arrives with the first screen that needs taps. Recipe for any feature:
+Guardian has no browser or CLI surface. Step 1 was pure adb probing; Step 2 adds Compose screens, so taps and `uiautomator dump` enter the recipe. Dump the tree, read the text and bounds, then tap. Recipe for any feature:
 
 1. Cold start as in Launch.
 2. `adb -s RF8X60FV0TD logcat -c` right before the action, so captured logs belong to the drive.
@@ -93,4 +93,7 @@ Proof standards for this app:
 
 ## Helpers
 
-None to date. Every command is a one-liner shown above. When Step 2 adds navigation, add a helper that drives the tab bar, and show its invocation here.
+No script yet. The route taps for Step 2 live in `features/onboarding.md` and
+`features/status-screen.md`; a tab-bar driver lands with the persisted parent
+session at Step 3. Until then, tap through the gate once per process, because
+the in-memory PIN dies with it.
