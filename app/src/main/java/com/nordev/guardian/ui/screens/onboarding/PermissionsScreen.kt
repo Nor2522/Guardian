@@ -1,5 +1,8 @@
 package com.nordev.guardian.ui.screens.onboarding
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +49,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.nordev.guardian.R
+import com.nordev.guardian.data.permissions.NotificationAccessChecker
 import com.nordev.guardian.data.permissions.UsageAccessChecker
 import com.nordev.guardian.data.prefs.SettingsRepository
 import com.nordev.guardian.ui.theme.LocalGuardianStatusColors
@@ -54,22 +59,43 @@ fun PermissionsScreen(
     onBack: () -> Unit,
     onOpenDisclosure: (DisclosureType) -> Unit,
     onOpenUsageSettings: () -> Unit,
+    onOpenNotificationSettings: () -> Unit,
+    requestNotifications: Boolean,
+    onNotificationsRequested: () -> Unit,
     onContinue: () -> Unit,
     onFinishLater: () -> Unit,
 ) {
     val context = LocalContext.current
-    val checker = remember(context) { UsageAccessChecker(context) }
+    val usageChecker = remember(context) { UsageAccessChecker(context) }
+    val notificationChecker = remember(context) { NotificationAccessChecker(context) }
     val settings = remember(context) { SettingsRepository(context) }
-    var usageGranted by remember { mutableStateOf(checker.isGranted()) }
+    var usageGranted by remember { mutableStateOf(usageChecker.isGranted()) }
+    var notificationsGranted by remember { mutableStateOf(notificationChecker.isGranted()) }
     val usageConsentAt by settings.usageConsentAt.collectAsState(initial = 0L)
+    val notificationConsentAt by settings.notificationConsentAt.collectAsState(initial = 0L)
+    val notificationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted -> notificationsGranted = granted }
     val lifecycleOwner = LocalLifecycleOwner.current
     var showLaterDialog by rememberSaveable { mutableStateOf(false) }
 
+    // The disclosure action records consent, pops back here, and asks for the
+    // runtime permission exactly once. Later taps open the Settings toggle.
+    LaunchedEffect(requestNotifications) {
+        if (requestNotifications) {
+            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            onNotificationsRequested()
+        }
+    }
+
     // The system settings screen flips the app-op outside this process, so
     // re-read it every time the permissions step comes back to the foreground.
-    DisposableEffect(lifecycleOwner, checker) {
+    DisposableEffect(lifecycleOwner, usageChecker, notificationChecker) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) usageGranted = checker.isGranted()
+            if (event == Lifecycle.Event.ON_RESUME) {
+                usageGranted = usageChecker.isGranted()
+                notificationsGranted = notificationChecker.isGranted()
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -77,6 +103,13 @@ fun PermissionsScreen(
 
     val usageActionLabel = stringResource(
         if (usageGranted || usageConsentAt > 0L) R.string.action_open_settings else R.string.permission_set_up,
+    )
+    val notificationActionLabel = stringResource(
+        if (notificationsGranted || notificationConsentAt > 0L) {
+            R.string.action_open_settings
+        } else {
+            R.string.permission_set_up
+        },
     )
     OnboardingShell(
         stepNumber = 4,
@@ -118,10 +151,18 @@ fun PermissionsScreen(
             icon = Icons.Outlined.Notifications,
             name = stringResource(R.string.perm_notifications),
             reason = stringResource(R.string.perm_notifications_reason),
-            status = stringResource(R.string.permission_state_off),
-            statusOn = false,
-            setupLabel = stringResource(R.string.permission_set_up),
-            onSetup = { onOpenDisclosure(DisclosureType.Notifications) },
+            status = stringResource(
+                if (notificationsGranted) R.string.permission_state_on else R.string.permission_state_off,
+            ),
+            statusOn = notificationsGranted,
+            setupLabel = notificationActionLabel,
+            onSetup = {
+                if (notificationsGranted || notificationConsentAt > 0L) {
+                    onOpenNotificationSettings()
+                } else {
+                    onOpenDisclosure(DisclosureType.Notifications)
+                }
+            },
         )
         PermissionCard(
             icon = Icons.Outlined.Accessibility,

@@ -61,6 +61,7 @@ enum class DisclosureType(
         R.string.disclosure_notifications_body,
         R.string.disclosure_action_notifications,
         Icons.Outlined.Notifications,
+        implemented = true,
     ),
     Accessibility(
         R.string.perm_accessibility,

@@ -84,6 +84,7 @@ fun GuardianNavHost(
     val currentRoute = backStackEntry?.destination?.route
     val isParentRoute = currentRoute?.startsWith(Routes.PARENT) == true
     var showLockWarning by remember { mutableStateOf(false) }
+    var requestNotifications by remember { mutableStateOf(false) }
 
     // Background, screen off, and recents all stop the activity; that lock is
     // separate from the five idle minutes counted below.
@@ -173,6 +174,9 @@ fun GuardianNavHost(
                     onBack = { navController.popBackStack() },
                     onOpenDisclosure = { type -> navController.navigate(Routes.disclosureRoute(type)) },
                     onOpenUsageSettings = { launchUsageAccessSettings(context) },
+                    onOpenNotificationSettings = { launchNotificationSettings(context) },
+                    requestNotifications = requestNotifications,
+                    onNotificationsRequested = { requestNotifications = false },
                     onContinue = { navController.navigate(Routes.ONBOARDING_DONE) },
                     onFinishLater = {
                         navController.navigate(Routes.STATUS) {
@@ -190,12 +194,18 @@ fun GuardianNavHost(
                     type = Routes.disclosureTypeFrom(typeName),
                     onBack = { navController.popBackStack() },
                     onConsented = {
-                        if (typeName == DisclosureType.UsageAccess.name) {
-                            scope.launch { settingsRepository.recordUsageConsent() }
-                            navController.popBackStack()
-                            launchUsageAccessSettings(context)
-                        } else {
-                            navController.popBackStack()
+                        when (typeName) {
+                            DisclosureType.UsageAccess.name -> {
+                                scope.launch { settingsRepository.recordUsageConsent() }
+                                navController.popBackStack()
+                                launchUsageAccessSettings(context)
+                            }
+                            DisclosureType.Notifications.name -> {
+                                scope.launch { settingsRepository.recordNotificationConsent() }
+                                requestNotifications = true
+                                navController.popBackStack()
+                            }
+                            else -> navController.popBackStack()
                         }
                     },
                 )
@@ -224,4 +234,13 @@ fun GuardianNavHost(
 
 private fun launchUsageAccessSettings(context: Context) {
     runCatching { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
+}
+
+private fun launchNotificationSettings(context: Context) {
+    runCatching {
+        context.startActivity(
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+        )
+    }
 }

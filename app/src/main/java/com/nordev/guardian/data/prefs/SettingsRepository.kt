@@ -15,12 +15,18 @@ class SettingsRepository(context: Context) {
     private val store = context.applicationContext.settingsStore
 
     val usageConsentAt: Flow<Long> = store.data.map { it[USAGE_CONSENT_AT] ?: 0L }
+    val notificationConsentAt: Flow<Long> = store.data.map { it[NOTIFICATION_CONSENT_AT] ?: 0L }
 
     suspend fun recordUsageConsent(now: Long = System.currentTimeMillis()) {
         store.edit { it[USAGE_CONSENT_AT] = now }
     }
 
+    suspend fun recordNotificationConsent(now: Long = System.currentTimeMillis()) {
+        store.edit { it[NOTIFICATION_CONSENT_AT] = now }
+    }
+
     private companion object {
         val USAGE_CONSENT_AT = longPreferencesKey("usage_access_consent_at")
+        val NOTIFICATION_CONSENT_AT = longPreferencesKey("notifications_consent_at")
     }
 }

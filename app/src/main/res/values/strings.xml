@@ -101,7 +101,7 @@
     <string name="disclosure_consent_needed">Tick the checkbox above first.</string>
     <string name="disclosure_build_note">This build records your choice only. It does not open Android settings yet. Permission setup comes in a later step.</string>
     <string name="disclosure_action_usage">Open Usage access settings</string>
-    <string name="disclosure_action_notifications">I understand</string>
+    <string name="disclosure_action_notifications">Allow notifications</string>
     <string name="disclosure_action_accessibility">I understand</string>
     <string name="disclosure_action_vpn">I understand</string>
     <string name="disclosure_action_admin">I understand</string>
