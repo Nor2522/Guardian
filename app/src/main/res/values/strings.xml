@@ -64,7 +64,7 @@
     <!-- Step 4 Permissions -->
     <string name="onboarding_permissions_title">Turn on protection</string>
     <string name="onboarding_permissions_body">Android asks for each permission separately. You can skip a check and finish it later. That check stays off until you return.</string>
-    <string name="onboarding_permissions_build_note">Permission setup is not available in this build yet. Tapping Set up opens an explanation. The Android permission screen comes in a later step.</string>
+    <string name="permission_state_on">On</string>
     <string name="permission_state_off">Off</string>
     <string name="permission_set_up">Set up</string>
     <string name="onboarding_finish_later">Finish later</string>
@@ -100,7 +100,7 @@
     <string name="disclosure_consent">I understand what this permission does.</string>
     <string name="disclosure_consent_needed">Tick the checkbox above first.</string>
     <string name="disclosure_build_note">This build records your choice only. It does not open Android settings yet. Permission setup comes in a later step.</string>
-    <string name="disclosure_action_usage">I understand</string>
+    <string name="disclosure_action_usage">Open Usage access settings</string>
     <string name="disclosure_action_notifications">I understand</string>
     <string name="disclosure_action_accessibility">I understand</string>
     <string name="disclosure_action_vpn">I understand</string>

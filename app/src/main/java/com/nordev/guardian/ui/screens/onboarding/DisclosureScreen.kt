@@ -40,18 +40,21 @@ import com.nordev.guardian.ui.components.GuardianTopBar
 import com.nordev.guardian.ui.components.StickyActionBar
 
 // One entry per permission; consent is never shared between permissions.
-// Type names double as the navigation argument values.
+// Type names double as the navigation argument values. Usage access opens the
+// system screen; the other entries stay copy-only until their own step.
 enum class DisclosureType(
     val titleRes: Int,
     val bodyRes: Int,
     val actionRes: Int,
     val icon: ImageVector,
+    val implemented: Boolean = false,
 ) {
     UsageAccess(
         R.string.perm_usage,
         R.string.disclosure_usage_body,
         R.string.disclosure_action_usage,
         Icons.Outlined.Timelapse,
+        implemented = true,
     ),
     Notifications(
         R.string.perm_notifications,
@@ -79,9 +82,8 @@ enum class DisclosureType(
     ),
 }
 
-// The named action launches no system screen in this step; it records consent
-// and returns to the permissions step. The build note says so on screen. Step 4
-// wires the real system intent and restores the action labels.
+// The action is named after what happens next. Usage access pops back to the
+// permissions step and opens the system screen; placeholders only return.
 @Composable
 fun DisclosureScreen(
     type: DisclosureType,
@@ -135,12 +137,14 @@ fun DisclosureScreen(
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                 )
             }
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.disclosure_build_note),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (!type.implemented) {
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.disclosure_build_note),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Spacer(Modifier.height(16.dp))
         }
         StickyActionBar(

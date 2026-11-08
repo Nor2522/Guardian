@@ -1,5 +1,8 @@
 package com.nordev.guardian.ui.nav
 
+import android.content.Context
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -8,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -24,6 +28,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.nordev.guardian.data.prefs.ParentPinRepository
+import com.nordev.guardian.data.prefs.SettingsRepository
 import com.nordev.guardian.ui.screens.gate.GateScreen
 import com.nordev.guardian.ui.screens.onboarding.DisclosureScreen
 import com.nordev.guardian.ui.screens.onboarding.DisclosureType
@@ -35,8 +40,9 @@ import com.nordev.guardian.ui.screens.onboarding.WelcomeScreen
 import com.nordev.guardian.ui.screens.parent.ParentScaffold
 import com.nordev.guardian.ui.screens.status.StatusScreen
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-// Theme is still in-memory; only the parent PIN persists in this step.
+// Theme is still in-memory. The PIN and per-permission consent persist.
 enum class ThemeMode { System, Light, Dark }
 
 object Routes {
@@ -70,6 +76,8 @@ fun GuardianNavHost(
     val navController = rememberNavController()
     val context = LocalContext.current
     val repository = remember(context) { ParentPinRepository(context) }
+    val settingsRepository = remember(context) { SettingsRepository(context) }
+    val scope = rememberCoroutineScope()
     val session = viewModel<ParentSessionViewModel>().session
     val lifecycleOwner = LocalLifecycleOwner.current
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -164,6 +172,7 @@ fun GuardianNavHost(
                 PermissionsScreen(
                     onBack = { navController.popBackStack() },
                     onOpenDisclosure = { type -> navController.navigate(Routes.disclosureRoute(type)) },
+                    onOpenUsageSettings = { launchUsageAccessSettings(context) },
                     onContinue = { navController.navigate(Routes.ONBOARDING_DONE) },
                     onFinishLater = {
                         navController.navigate(Routes.STATUS) {
@@ -180,7 +189,15 @@ fun GuardianNavHost(
                 DisclosureScreen(
                     type = Routes.disclosureTypeFrom(typeName),
                     onBack = { navController.popBackStack() },
-                    onConsented = { navController.popBackStack() },
+                    onConsented = {
+                        if (typeName == DisclosureType.UsageAccess.name) {
+                            scope.launch { settingsRepository.recordUsageConsent() }
+                            navController.popBackStack()
+                            launchUsageAccessSettings(context)
+                        } else {
+                            navController.popBackStack()
+                        }
+                    },
                 )
             }
             composable(Routes.ONBOARDING_DONE) {
@@ -203,4 +220,8 @@ fun GuardianNavHost(
             }
         }
     }
+}
+
+private fun launchUsageAccessSettings(context: Context) {
+    runCatching { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
 }

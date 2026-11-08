@@ -26,27 +26,58 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.nordev.guardian.R
+import com.nordev.guardian.data.permissions.UsageAccessChecker
+import com.nordev.guardian.data.prefs.SettingsRepository
+import com.nordev.guardian.ui.theme.LocalGuardianStatusColors
 
 @Composable
 fun PermissionsScreen(
     onBack: () -> Unit,
     onOpenDisclosure: (DisclosureType) -> Unit,
+    onOpenUsageSettings: () -> Unit,
     onContinue: () -> Unit,
     onFinishLater: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val checker = remember(context) { UsageAccessChecker(context) }
+    val settings = remember(context) { SettingsRepository(context) }
+    var usageGranted by remember { mutableStateOf(checker.isGranted()) }
+    val usageConsentAt by settings.usageConsentAt.collectAsState(initial = 0L)
+    val lifecycleOwner = LocalLifecycleOwner.current
     var showLaterDialog by rememberSaveable { mutableStateOf(false) }
+
+    // The system settings screen flips the app-op outside this process, so
+    // re-read it every time the permissions step comes back to the foreground.
+    DisposableEffect(lifecycleOwner, checker) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) usageGranted = checker.isGranted()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    val usageActionLabel = stringResource(
+        if (usageGranted || usageConsentAt > 0L) R.string.action_open_settings else R.string.permission_set_up,
+    )
     OnboardingShell(
         stepNumber = 4,
         onBack = onBack,
@@ -65,24 +96,30 @@ fun PermissionsScreen(
             text = stringResource(R.string.onboarding_permissions_body),
             style = MaterialTheme.typography.bodyLarge,
         )
-        Spacer(Modifier.height(12.dp))
-        Text(
-            text = stringResource(R.string.onboarding_permissions_build_note),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
         Spacer(Modifier.height(24.dp))
         PermissionCard(
             icon = Icons.Outlined.Timelapse,
             name = stringResource(R.string.perm_usage),
             reason = stringResource(R.string.perm_usage_reason),
-            setupLabel = stringResource(R.string.permission_set_up),
-            onSetup = { onOpenDisclosure(DisclosureType.UsageAccess) },
+            status = stringResource(
+                if (usageGranted) R.string.permission_state_on else R.string.permission_state_off,
+            ),
+            statusOn = usageGranted,
+            setupLabel = usageActionLabel,
+            onSetup = {
+                if (usageGranted || usageConsentAt > 0L) {
+                    onOpenUsageSettings()
+                } else {
+                    onOpenDisclosure(DisclosureType.UsageAccess)
+                }
+            },
         )
         PermissionCard(
             icon = Icons.Outlined.Notifications,
             name = stringResource(R.string.perm_notifications),
             reason = stringResource(R.string.perm_notifications_reason),
+            status = stringResource(R.string.permission_state_off),
+            statusOn = false,
             setupLabel = stringResource(R.string.permission_set_up),
             onSetup = { onOpenDisclosure(DisclosureType.Notifications) },
         )
@@ -90,6 +127,8 @@ fun PermissionsScreen(
             icon = Icons.Outlined.Accessibility,
             name = stringResource(R.string.perm_accessibility),
             reason = stringResource(R.string.perm_accessibility_reason),
+            status = stringResource(R.string.permission_state_off),
+            statusOn = false,
             setupLabel = stringResource(R.string.permission_set_up),
             onSetup = { onOpenDisclosure(DisclosureType.Accessibility) },
         )
@@ -97,6 +136,8 @@ fun PermissionsScreen(
             icon = Icons.Outlined.VpnKey,
             name = stringResource(R.string.perm_vpn),
             reason = stringResource(R.string.perm_vpn_reason),
+            status = stringResource(R.string.permission_state_off),
+            statusOn = false,
             setupLabel = stringResource(R.string.permission_set_up),
             onSetup = { onOpenDisclosure(DisclosureType.VpnFilter) },
         )
@@ -104,6 +145,8 @@ fun PermissionsScreen(
             icon = Icons.Outlined.AdminPanelSettings,
             name = stringResource(R.string.perm_admin),
             reason = stringResource(R.string.perm_admin_reason),
+            status = stringResource(R.string.permission_state_off),
+            statusOn = false,
             setupLabel = stringResource(R.string.permission_set_up),
             onSetup = { onOpenDisclosure(DisclosureType.DeviceAdmin) },
         )
@@ -136,6 +179,8 @@ private fun PermissionCard(
     icon: ImageVector,
     name: String,
     reason: String,
+    status: String,
+    statusOn: Boolean,
     setupLabel: String,
     onSetup: () -> Unit,
 ) {
@@ -176,9 +221,13 @@ private fun PermissionCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = stringResource(R.string.permission_state_off),
+                    text = status,
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (statusOn) {
+                        LocalGuardianStatusColors.current.success
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 )
             }
             Spacer(Modifier.width(8.dp))
