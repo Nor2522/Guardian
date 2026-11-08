@@ -30,6 +30,12 @@ class ParentSession(
         isUnlocked = false
     }
 
+    fun remainingMillis(): Long =
+        if (!isUnlocked) 0L else (timeoutMillis - (clock() - lastActiveAt)).coerceAtLeast(0L)
+
+    fun warningDue(): Boolean =
+        isUnlocked && remainingMillis() in 1..PinPolicy.SESSION_WARNING_MILLIS
+
     fun expired(): Boolean =
         isUnlocked && clock() - lastActiveAt >= timeoutMillis
 }

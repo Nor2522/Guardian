@@ -6,7 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -73,6 +75,7 @@ fun GuardianNavHost(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val isParentRoute = currentRoute?.startsWith(Routes.PARENT) == true
+    var showLockWarning by remember { mutableStateOf(false) }
 
     // Background, screen off, and recents all stop the activity; that lock is
     // separate from the five idle minutes counted below.
@@ -95,9 +98,11 @@ fun GuardianNavHost(
 
     LaunchedEffect(session.isUnlocked) {
         while (session.isUnlocked) {
-            delay(1_000)
+            showLockWarning = session.warningDue()
             if (session.expired()) session.lock()
+            delay(1_000)
         }
+        showLockWarning = false
     }
 
     LaunchedEffect(isParentRoute) {
@@ -190,7 +195,11 @@ fun GuardianNavHost(
                 )
             }
             composable(Routes.PARENT) {
-                ParentScaffold(themeMode = themeMode, onThemeChange = onThemeChange)
+                ParentScaffold(
+                    themeMode = themeMode,
+                    onThemeChange = onThemeChange,
+                    showLockWarning = showLockWarning && isParentRoute,
+                )
             }
         }
     }

@@ -45,4 +45,22 @@ class ParentSessionTest {
         assertFalse(session.isUnlocked)
         assertFalse(session.expired())
     }
+
+    @Test
+    fun warningStartsThirtySecondsBeforeExpiry() {
+        session.unlock()
+        now = PinPolicy.SESSION_TIMEOUT_MILLIS - PinPolicy.SESSION_WARNING_MILLIS - 1
+        assertFalse(session.warningDue())
+        now = PinPolicy.SESSION_TIMEOUT_MILLIS - PinPolicy.SESSION_WARNING_MILLIS
+        assertTrue(session.warningDue())
+    }
+
+    @Test
+    fun touchClearsTheWarning() {
+        session.unlock()
+        now = PinPolicy.SESSION_TIMEOUT_MILLIS - PinPolicy.SESSION_WARNING_MILLIS
+        assertTrue(session.warningDue())
+        session.touch()
+        assertFalse(session.warningDue())
+    }
 }

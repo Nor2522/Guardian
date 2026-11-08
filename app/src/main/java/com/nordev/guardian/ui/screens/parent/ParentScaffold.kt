@@ -15,9 +15,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -49,13 +54,28 @@ private val parentTabs = listOf(
 fun ParentScaffold(
     themeMode: ThemeMode,
     onThemeChange: (ThemeMode) -> Unit,
+    showLockWarning: Boolean,
 ) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val showBottomBar = currentRoute != Routes.PARENT_SETTINGS
+    val snackbarHostState = remember { SnackbarHostState() }
+    val warningText = stringResource(R.string.parent_session_warning)
+
+    LaunchedEffect(showLockWarning) {
+        if (showLockWarning) {
+            snackbarHostState.showSnackbar(
+                message = warningText,
+                duration = SnackbarDuration.Short,
+            )
+        } else {
+            snackbarHostState.currentSnackbarData?.dismiss()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
                 GuardianBottomBar(navController = navController, currentRoute = currentRoute)

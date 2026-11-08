@@ -7,6 +7,7 @@ object PinPolicy {
     const val MAX_ATTEMPTS = 5
     const val LOCKOUT_MILLIS = 60_000L
     const val SESSION_TIMEOUT_MILLIS = 5 * 60_000L
+    const val SESSION_WARNING_MILLIS = 30_000L
 
     data class FailureState(
         val failedAttempts: Int,

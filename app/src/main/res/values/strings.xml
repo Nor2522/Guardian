@@ -24,6 +24,7 @@
     <string name="gate_error_wrong">That PIN is not correct. Try again.</string>
     <string name="gate_checking">Checking…</string>
     <string name="gate_locked">Too many tries. Try again in %1$d seconds.</string>
+    <string name="parent_session_warning">Guardian will lock in 30 seconds.</string>
     <string name="pin_field_cd">PIN</string>
 
     <!-- Onboarding shell -->
