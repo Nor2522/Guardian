@@ -102,10 +102,13 @@
     <string name="disclosure_build_note">This build records your choice only. It does not open Android settings yet. Permission setup comes in a later step.</string>
     <string name="disclosure_action_usage">Open Usage access settings</string>
     <string name="disclosure_action_notifications">Allow notifications</string>
-    <string name="disclosure_action_accessibility">I understand</string>
+    <string name="disclosure_action_accessibility">Open Accessibility settings</string>
     <string name="disclosure_action_vpn">I understand</string>
     <string name="disclosure_action_admin">I understand</string>
     <string name="disclosure_not_now">Not now</string>
+
+    <!-- Accessibility service -->
+    <string name="accessibility_service_description">Guardian uses Accessibility to notice which app is open, so it can show the pause screen when a limit or schedule applies. It does not read text on the screen, watch taps, type for you, or control other apps.</string>
 
     <!-- Parent tabs -->
     <string name="tab_today">Today</string>

@@ -68,6 +68,7 @@ enum class DisclosureType(
         R.string.disclosure_accessibility_body,
         R.string.disclosure_action_accessibility,
         Icons.Outlined.Accessibility,
+        implemented = true,
     ),
     VpnFilter(
         R.string.perm_vpn,

@@ -49,6 +49,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.nordev.guardian.R
+import com.nordev.guardian.data.permissions.AccessibilityAccessChecker
 import com.nordev.guardian.data.permissions.NotificationAccessChecker
 import com.nordev.guardian.data.permissions.UsageAccessChecker
 import com.nordev.guardian.data.prefs.SettingsRepository
@@ -60,6 +61,7 @@ fun PermissionsScreen(
     onOpenDisclosure: (DisclosureType) -> Unit,
     onOpenUsageSettings: () -> Unit,
     onOpenNotificationSettings: () -> Unit,
+    onOpenAccessibilitySettings: () -> Unit,
     requestNotifications: Boolean,
     onNotificationsRequested: () -> Unit,
     onContinue: () -> Unit,
@@ -68,11 +70,14 @@ fun PermissionsScreen(
     val context = LocalContext.current
     val usageChecker = remember(context) { UsageAccessChecker(context) }
     val notificationChecker = remember(context) { NotificationAccessChecker(context) }
+    val accessibilityChecker = remember(context) { AccessibilityAccessChecker(context) }
     val settings = remember(context) { SettingsRepository(context) }
     var usageGranted by remember { mutableStateOf(usageChecker.isGranted()) }
     var notificationsGranted by remember { mutableStateOf(notificationChecker.isGranted()) }
+    var accessibilityGranted by remember { mutableStateOf(accessibilityChecker.isGranted()) }
     val usageConsentAt by settings.usageConsentAt.collectAsState(initial = 0L)
     val notificationConsentAt by settings.notificationConsentAt.collectAsState(initial = 0L)
+    val accessibilityConsentAt by settings.accessibilityConsentAt.collectAsState(initial = 0L)
     val notificationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted -> notificationsGranted = granted }
@@ -90,11 +95,12 @@ fun PermissionsScreen(
 
     // The system settings screen flips the app-op outside this process, so
     // re-read it every time the permissions step comes back to the foreground.
-    DisposableEffect(lifecycleOwner, usageChecker, notificationChecker) {
+    DisposableEffect(lifecycleOwner, usageChecker, notificationChecker, accessibilityChecker) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 usageGranted = usageChecker.isGranted()
                 notificationsGranted = notificationChecker.isGranted()
+                accessibilityGranted = accessibilityChecker.isGranted()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -106,6 +112,13 @@ fun PermissionsScreen(
     )
     val notificationActionLabel = stringResource(
         if (notificationsGranted || notificationConsentAt > 0L) {
+            R.string.action_open_settings
+        } else {
+            R.string.permission_set_up
+        },
+    )
+    val accessibilityActionLabel = stringResource(
+        if (accessibilityGranted || accessibilityConsentAt > 0L) {
             R.string.action_open_settings
         } else {
             R.string.permission_set_up
@@ -168,10 +181,18 @@ fun PermissionsScreen(
             icon = Icons.Outlined.Accessibility,
             name = stringResource(R.string.perm_accessibility),
             reason = stringResource(R.string.perm_accessibility_reason),
-            status = stringResource(R.string.permission_state_off),
-            statusOn = false,
-            setupLabel = stringResource(R.string.permission_set_up),
-            onSetup = { onOpenDisclosure(DisclosureType.Accessibility) },
+            status = stringResource(
+                if (accessibilityGranted) R.string.permission_state_on else R.string.permission_state_off,
+            ),
+            statusOn = accessibilityGranted,
+            setupLabel = accessibilityActionLabel,
+            onSetup = {
+                if (accessibilityGranted || accessibilityConsentAt > 0L) {
+                    onOpenAccessibilitySettings()
+                } else {
+                    onOpenDisclosure(DisclosureType.Accessibility)
+                }
+            },
         )
         PermissionCard(
             icon = Icons.Outlined.VpnKey,

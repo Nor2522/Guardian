@@ -175,6 +175,7 @@ fun GuardianNavHost(
                     onOpenDisclosure = { type -> navController.navigate(Routes.disclosureRoute(type)) },
                     onOpenUsageSettings = { launchUsageAccessSettings(context) },
                     onOpenNotificationSettings = { launchNotificationSettings(context) },
+                    onOpenAccessibilitySettings = { launchAccessibilitySettings(context) },
                     requestNotifications = requestNotifications,
                     onNotificationsRequested = { requestNotifications = false },
                     onContinue = { navController.navigate(Routes.ONBOARDING_DONE) },
@@ -204,6 +205,11 @@ fun GuardianNavHost(
                                 scope.launch { settingsRepository.recordNotificationConsent() }
                                 requestNotifications = true
                                 navController.popBackStack()
+                            }
+                            DisclosureType.Accessibility.name -> {
+                                scope.launch { settingsRepository.recordAccessibilityConsent() }
+                                navController.popBackStack()
+                                launchAccessibilitySettings(context)
                             }
                             else -> navController.popBackStack()
                         }
@@ -243,4 +249,8 @@ private fun launchNotificationSettings(context: Context) {
                 .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
         )
     }
+}
+
+private fun launchAccessibilitySettings(context: Context) {
+    runCatching { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
 }
