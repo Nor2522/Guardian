@@ -33,6 +33,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.nordev.guardian.R
+import com.nordev.guardian.data.usage.UsageSnapshot
 import com.nordev.guardian.ui.nav.Routes
 import com.nordev.guardian.ui.nav.ThemeMode
 
@@ -55,6 +56,8 @@ fun ParentScaffold(
     themeMode: ThemeMode,
     onThemeChange: (ThemeMode) -> Unit,
     showLockWarning: Boolean,
+    usage: UsageSnapshot?,
+    onOpenUsageSettings: () -> Unit,
 ) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -90,7 +93,11 @@ fun ParentScaffold(
                 .padding(innerPadding),
         ) {
             composable(Routes.PARENT_TODAY) {
-                TodayScreen(onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) })
+                TodayScreen(
+                    usage = usage,
+                    onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) },
+                    onOpenUsageSettings = onOpenUsageSettings,
+                )
             }
             composable(Routes.PARENT_LIMITS) {
                 LimitsScreen(onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) })

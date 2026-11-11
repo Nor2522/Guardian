@@ -29,15 +29,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.nordev.guardian.R
+import com.nordev.guardian.data.usage.UsageSnapshot
 import com.nordev.guardian.ui.components.MetricCard
 import com.nordev.guardian.ui.components.StatusHero
 import com.nordev.guardian.ui.components.StatusHeroState
+import com.nordev.guardian.ui.components.durationText
 
 // Protection checks and active rules are hidden in this step: nothing ships
 // before Step 3, and the design hides features rather than showing them as off.
 @Composable
 fun StatusScreen(
     onOpenGate: () -> Unit,
+    usage: UsageSnapshot?,
 ) {
     Column(
         modifier = Modifier
@@ -70,7 +73,19 @@ fun StatusScreen(
         Spacer(Modifier.height(32.dp))
         MetricCard(
             label = stringResource(R.string.screen_time_today_label),
-            value = stringResource(R.string.usage_today_none),
+            value = when {
+                usage == null -> stringResource(R.string.usage_loading)
+                !usage.accessGranted -> stringResource(R.string.usage_unavailable)
+                else -> durationText(
+                    millis = usage.todayMillis,
+                    noneLabel = stringResource(R.string.usage_today_none),
+                )
+            },
+            chipLabel = if (usage?.estimated == true) {
+                stringResource(R.string.estimated)
+            } else {
+                null
+            },
         )
         Spacer(Modifier.height(32.dp))
         Button(

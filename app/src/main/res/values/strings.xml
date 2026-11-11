@@ -8,6 +8,8 @@
     <string name="hero_setup_title">Finish setting up Guardian</string>
     <string name="hero_setup_body">3 checks are left before protection is complete.</string>
     <string name="usage_today_none">None today</string>
+    <string name="usage_unavailable">Not available</string>
+    <string name="usage_loading">Reading…</string>
     <string name="screen_time_today_label">Screen time today</string>
 
     <!-- Shared labels -->
@@ -123,6 +125,22 @@
     <string name="action_open_settings">Open settings</string>
     <string name="section_apps_today">Apps today</string>
     <string name="empty_today">No screen time recorded yet today.</string>
+    <string name="week_title">Last 7 days</string>
+    <string name="week_chart_cd">Last 7 days, %1$s. %2$s</string>
+    <string name="no_limit">No limit</string>
+    <string name="estimated">Estimated</string>
+    <string name="duration_none">None</string>
+    <string name="duration_less_than_minute">Less than 1 min</string>
+    <string name="duration_hours">%1$d h</string>
+    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+    <plurals name="duration_minutes">
+        <item quantity="one">%1$d min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
+    <plurals name="apps_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
 
     <!-- Limits -->
     <string name="limits_intro">Daily limits reset at midnight.</string>

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +49,7 @@ import com.nordev.guardian.ui.screens.onboarding.PrivacyScreen
 import com.nordev.guardian.ui.screens.onboarding.WelcomeScreen
 import com.nordev.guardian.ui.screens.parent.ParentScaffold
 import com.nordev.guardian.ui.screens.status.StatusScreen
+import com.nordev.guardian.ui.usage.UsageViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -88,6 +90,8 @@ fun GuardianNavHost(
     val settingsRepository = remember(context) { SettingsRepository(context) }
     val scope = rememberCoroutineScope()
     val session = viewModel<ParentSessionViewModel>().session
+    val usageViewModel = viewModel<UsageViewModel>()
+    val usage by usageViewModel.state.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -103,6 +107,7 @@ fun GuardianNavHost(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_STOP) session.lock()
+            if (event == Lifecycle.Event.ON_RESUME) usageViewModel.refresh()
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -144,7 +149,10 @@ fun GuardianNavHost(
     ) {
         NavHost(navController = navController, startDestination = Routes.STATUS) {
             composable(Routes.STATUS) {
-                StatusScreen(onOpenGate = { navController.navigate(Routes.GATE) })
+                StatusScreen(
+                    onOpenGate = { navController.navigate(Routes.GATE) },
+                    usage = usage,
+                )
             }
             composable(Routes.GATE) {
                 GateScreen(
@@ -256,6 +264,8 @@ fun GuardianNavHost(
                     themeMode = themeMode,
                     onThemeChange = onThemeChange,
                     showLockWarning = showLockWarning && isParentRoute,
+                    usage = usage,
+                    onOpenUsageSettings = { launchUsageAccessSettings(context) },
                 )
             }
         }
