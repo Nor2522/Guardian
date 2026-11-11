@@ -50,6 +50,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.nordev.guardian.R
 import com.nordev.guardian.data.permissions.AccessibilityAccessChecker
+import com.nordev.guardian.data.permissions.DeviceAdminAccessChecker
 import com.nordev.guardian.data.permissions.NotificationAccessChecker
 import com.nordev.guardian.data.permissions.UsageAccessChecker
 import com.nordev.guardian.data.permissions.VpnAccessChecker
@@ -64,6 +65,7 @@ fun PermissionsScreen(
     onOpenNotificationSettings: () -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     onOpenVpnSettings: () -> Unit,
+    onOpenDeviceAdminSettings: () -> Unit,
     requestNotifications: Boolean,
     onNotificationsRequested: () -> Unit,
     onContinue: () -> Unit,
@@ -74,15 +76,18 @@ fun PermissionsScreen(
     val notificationChecker = remember(context) { NotificationAccessChecker(context) }
     val accessibilityChecker = remember(context) { AccessibilityAccessChecker(context) }
     val vpnChecker = remember(context) { VpnAccessChecker(context) }
+    val deviceAdminChecker = remember(context) { DeviceAdminAccessChecker(context) }
     val settings = remember(context) { SettingsRepository(context) }
     var usageGranted by remember { mutableStateOf(usageChecker.isGranted()) }
     var notificationsGranted by remember { mutableStateOf(notificationChecker.isGranted()) }
     var accessibilityGranted by remember { mutableStateOf(accessibilityChecker.isGranted()) }
     var vpnGranted by remember { mutableStateOf(vpnChecker.isGranted()) }
+    var deviceAdminGranted by remember { mutableStateOf(deviceAdminChecker.isGranted()) }
     val usageConsentAt by settings.usageConsentAt.collectAsState(initial = 0L)
     val notificationConsentAt by settings.notificationConsentAt.collectAsState(initial = 0L)
     val accessibilityConsentAt by settings.accessibilityConsentAt.collectAsState(initial = 0L)
     val vpnConsentAt by settings.vpnConsentAt.collectAsState(initial = 0L)
+    val deviceAdminConsentAt by settings.deviceAdminConsentAt.collectAsState(initial = 0L)
     val notificationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted -> notificationsGranted = granted }
@@ -100,13 +105,21 @@ fun PermissionsScreen(
 
     // The system settings screen flips the app-op outside this process, so
     // re-read it every time the permissions step comes back to the foreground.
-    DisposableEffect(lifecycleOwner, usageChecker, notificationChecker, accessibilityChecker, vpnChecker) {
+    DisposableEffect(
+        lifecycleOwner,
+        usageChecker,
+        notificationChecker,
+        accessibilityChecker,
+        vpnChecker,
+        deviceAdminChecker,
+    ) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 usageGranted = usageChecker.isGranted()
                 notificationsGranted = notificationChecker.isGranted()
                 accessibilityGranted = accessibilityChecker.isGranted()
                 vpnGranted = vpnChecker.isGranted()
+                deviceAdminGranted = deviceAdminChecker.isGranted()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -132,6 +145,13 @@ fun PermissionsScreen(
     )
     val vpnActionLabel = stringResource(
         if (vpnGranted || vpnConsentAt > 0L) R.string.action_open_settings else R.string.permission_set_up,
+    )
+    val deviceAdminActionLabel = stringResource(
+        if (deviceAdminGranted || deviceAdminConsentAt > 0L) {
+            R.string.action_open_settings
+        } else {
+            R.string.permission_set_up
+        },
     )
     OnboardingShell(
         stepNumber = 4,
@@ -224,10 +244,18 @@ fun PermissionsScreen(
             icon = Icons.Outlined.AdminPanelSettings,
             name = stringResource(R.string.perm_admin),
             reason = stringResource(R.string.perm_admin_reason),
-            status = stringResource(R.string.permission_state_off),
-            statusOn = false,
-            setupLabel = stringResource(R.string.permission_set_up),
-            onSetup = { onOpenDisclosure(DisclosureType.DeviceAdmin) },
+            status = stringResource(
+                if (deviceAdminGranted) R.string.permission_state_on else R.string.permission_state_off,
+            ),
+            statusOn = deviceAdminGranted,
+            setupLabel = deviceAdminActionLabel,
+            onSetup = {
+                if (deviceAdminGranted || deviceAdminConsentAt > 0L) {
+                    onOpenDeviceAdminSettings()
+                } else {
+                    onOpenDisclosure(DisclosureType.DeviceAdmin)
+                }
+            },
         )
         Spacer(Modifier.height(16.dp))
     }

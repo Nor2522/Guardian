@@ -1,5 +1,8 @@
 package com.nordev.guardian.ui.nav
 
+import android.app.admin.DevicePolicyManager
+import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.VpnService
@@ -30,8 +33,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.nordev.guardian.R
+import com.nordev.guardian.data.permissions.DeviceAdminAccessChecker
 import com.nordev.guardian.data.prefs.ParentPinRepository
 import com.nordev.guardian.data.prefs.SettingsRepository
+import com.nordev.guardian.service.admin.GuardianDeviceAdminReceiver
 import com.nordev.guardian.ui.screens.gate.GateScreen
 import com.nordev.guardian.ui.screens.onboarding.DisclosureScreen
 import com.nordev.guardian.ui.screens.onboarding.DisclosureType
@@ -183,6 +189,7 @@ fun GuardianNavHost(
                     onOpenNotificationSettings = { launchNotificationSettings(context) },
                     onOpenAccessibilitySettings = { launchAccessibilitySettings(context) },
                     onOpenVpnSettings = { launchVpnAccess(context, vpnConsentLauncher::launch) },
+                    onOpenDeviceAdminSettings = { launchDeviceAdmin(context) },
                     requestNotifications = requestNotifications,
                     onNotificationsRequested = { requestNotifications = false },
                     onContinue = { navController.navigate(Routes.ONBOARDING_DONE) },
@@ -222,6 +229,11 @@ fun GuardianNavHost(
                                 scope.launch { settingsRepository.recordVpnConsent() }
                                 navController.popBackStack()
                                 launchVpnAccess(context, vpnConsentLauncher::launch)
+                            }
+                            DisclosureType.DeviceAdmin.name -> {
+                                scope.launch { settingsRepository.recordDeviceAdminConsent() }
+                                navController.popBackStack()
+                                launchDeviceAdmin(context)
                             }
                             else -> navController.popBackStack()
                         }
@@ -277,5 +289,40 @@ private fun launchVpnAccess(context: Context, launchForResult: (Intent) -> Unit)
         } else {
             context.startActivity(Intent(Settings.ACTION_VPN_SETTINGS))
         }
+    }
+}
+
+// Adding an admin takes the component plus the explanation. Samsung closes that
+// screen without drawing it once the admin is active, so the granted row opens
+// the admin list. Android exposes no public action for that list, so target the
+// platform Settings activity and fall back to Security settings when missing.
+private fun launchDeviceAdmin(context: Context) {
+    runCatching {
+        if (DeviceAdminAccessChecker(context).isGranted()) {
+            launchAdminList(context)
+        } else {
+            context.startActivity(
+                Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+                    .putExtra(
+                        DevicePolicyManager.EXTRA_DEVICE_ADMIN,
+                        ComponentName(context, GuardianDeviceAdminReceiver::class.java),
+                    )
+                    .putExtra(
+                        DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                        context.getString(R.string.device_admin_explanation),
+                    ),
+            )
+        }
+    }
+}
+
+private fun launchAdminList(context: Context) {
+    val list = Intent().setComponent(
+        ComponentName("com.android.settings", "com.android.settings.Settings\$DeviceAdminSettingsActivity"),
+    )
+    try {
+        context.startActivity(list)
+    } catch (_: ActivityNotFoundException) {
+        context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))
     }
 }

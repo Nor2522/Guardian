@@ -104,7 +104,8 @@
     <string name="disclosure_action_notifications">Allow notifications</string>
     <string name="disclosure_action_accessibility">Open Accessibility settings</string>
     <string name="disclosure_action_vpn">Allow VPN access</string>
-    <string name="disclosure_action_admin">I understand</string>
+    <string name="disclosure_action_admin">Activate Device Admin</string>
+    <string name="device_admin_explanation">Guardian blocks uninstall until the parent PIN is entered. It does not wipe the phone, lock the screen, or change your password.</string>
     <string name="disclosure_not_now">Not now</string>
 
     <!-- Accessibility service -->

@@ -82,6 +82,7 @@ enum class DisclosureType(
         R.string.disclosure_admin_body,
         R.string.disclosure_action_admin,
         Icons.Outlined.AdminPanelSettings,
+        implemented = true,
     ),
 }
 
