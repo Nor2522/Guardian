@@ -103,7 +103,7 @@
     <string name="disclosure_action_usage">Open Usage access settings</string>
     <string name="disclosure_action_notifications">Allow notifications</string>
     <string name="disclosure_action_accessibility">Open Accessibility settings</string>
-    <string name="disclosure_action_vpn">I understand</string>
+    <string name="disclosure_action_vpn">Allow VPN access</string>
     <string name="disclosure_action_admin">I understand</string>
     <string name="disclosure_not_now">Not now</string>
 

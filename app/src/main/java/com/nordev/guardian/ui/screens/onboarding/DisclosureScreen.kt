@@ -75,6 +75,7 @@ enum class DisclosureType(
         R.string.disclosure_vpn_body,
         R.string.disclosure_action_vpn,
         Icons.Outlined.VpnKey,
+        implemented = true,
     ),
     DeviceAdmin(
         R.string.perm_admin,

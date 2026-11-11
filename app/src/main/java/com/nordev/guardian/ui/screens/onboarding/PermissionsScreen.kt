@@ -52,6 +52,7 @@ import com.nordev.guardian.R
 import com.nordev.guardian.data.permissions.AccessibilityAccessChecker
 import com.nordev.guardian.data.permissions.NotificationAccessChecker
 import com.nordev.guardian.data.permissions.UsageAccessChecker
+import com.nordev.guardian.data.permissions.VpnAccessChecker
 import com.nordev.guardian.data.prefs.SettingsRepository
 import com.nordev.guardian.ui.theme.LocalGuardianStatusColors
 
@@ -62,6 +63,7 @@ fun PermissionsScreen(
     onOpenUsageSettings: () -> Unit,
     onOpenNotificationSettings: () -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
+    onOpenVpnSettings: () -> Unit,
     requestNotifications: Boolean,
     onNotificationsRequested: () -> Unit,
     onContinue: () -> Unit,
@@ -71,13 +73,16 @@ fun PermissionsScreen(
     val usageChecker = remember(context) { UsageAccessChecker(context) }
     val notificationChecker = remember(context) { NotificationAccessChecker(context) }
     val accessibilityChecker = remember(context) { AccessibilityAccessChecker(context) }
+    val vpnChecker = remember(context) { VpnAccessChecker(context) }
     val settings = remember(context) { SettingsRepository(context) }
     var usageGranted by remember { mutableStateOf(usageChecker.isGranted()) }
     var notificationsGranted by remember { mutableStateOf(notificationChecker.isGranted()) }
     var accessibilityGranted by remember { mutableStateOf(accessibilityChecker.isGranted()) }
+    var vpnGranted by remember { mutableStateOf(vpnChecker.isGranted()) }
     val usageConsentAt by settings.usageConsentAt.collectAsState(initial = 0L)
     val notificationConsentAt by settings.notificationConsentAt.collectAsState(initial = 0L)
     val accessibilityConsentAt by settings.accessibilityConsentAt.collectAsState(initial = 0L)
+    val vpnConsentAt by settings.vpnConsentAt.collectAsState(initial = 0L)
     val notificationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted -> notificationsGranted = granted }
@@ -95,12 +100,13 @@ fun PermissionsScreen(
 
     // The system settings screen flips the app-op outside this process, so
     // re-read it every time the permissions step comes back to the foreground.
-    DisposableEffect(lifecycleOwner, usageChecker, notificationChecker, accessibilityChecker) {
+    DisposableEffect(lifecycleOwner, usageChecker, notificationChecker, accessibilityChecker, vpnChecker) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 usageGranted = usageChecker.isGranted()
                 notificationsGranted = notificationChecker.isGranted()
                 accessibilityGranted = accessibilityChecker.isGranted()
+                vpnGranted = vpnChecker.isGranted()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -123,6 +129,9 @@ fun PermissionsScreen(
         } else {
             R.string.permission_set_up
         },
+    )
+    val vpnActionLabel = stringResource(
+        if (vpnGranted || vpnConsentAt > 0L) R.string.action_open_settings else R.string.permission_set_up,
     )
     OnboardingShell(
         stepNumber = 4,
@@ -198,10 +207,18 @@ fun PermissionsScreen(
             icon = Icons.Outlined.VpnKey,
             name = stringResource(R.string.perm_vpn),
             reason = stringResource(R.string.perm_vpn_reason),
-            status = stringResource(R.string.permission_state_off),
-            statusOn = false,
-            setupLabel = stringResource(R.string.permission_set_up),
-            onSetup = { onOpenDisclosure(DisclosureType.VpnFilter) },
+            status = stringResource(
+                if (vpnGranted) R.string.permission_state_on else R.string.permission_state_off,
+            ),
+            statusOn = vpnGranted,
+            setupLabel = vpnActionLabel,
+            onSetup = {
+                if (vpnGranted || vpnConsentAt > 0L) {
+                    onOpenVpnSettings()
+                } else {
+                    onOpenDisclosure(DisclosureType.VpnFilter)
+                }
+            },
         )
         PermissionCard(
             icon = Icons.Outlined.AdminPanelSettings,

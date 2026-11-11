@@ -2,7 +2,10 @@ package com.nordev.guardian.ui.nav
 
 import android.content.Context
 import android.content.Intent
+import android.net.VpnService
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -85,6 +88,9 @@ fun GuardianNavHost(
     val isParentRoute = currentRoute?.startsWith(Routes.PARENT) == true
     var showLockWarning by remember { mutableStateOf(false) }
     var requestNotifications by remember { mutableStateOf(false) }
+    val vpnConsentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { }
 
     // Background, screen off, and recents all stop the activity; that lock is
     // separate from the five idle minutes counted below.
@@ -176,6 +182,7 @@ fun GuardianNavHost(
                     onOpenUsageSettings = { launchUsageAccessSettings(context) },
                     onOpenNotificationSettings = { launchNotificationSettings(context) },
                     onOpenAccessibilitySettings = { launchAccessibilitySettings(context) },
+                    onOpenVpnSettings = { launchVpnAccess(context, vpnConsentLauncher::launch) },
                     requestNotifications = requestNotifications,
                     onNotificationsRequested = { requestNotifications = false },
                     onContinue = { navController.navigate(Routes.ONBOARDING_DONE) },
@@ -210,6 +217,11 @@ fun GuardianNavHost(
                                 scope.launch { settingsRepository.recordAccessibilityConsent() }
                                 navController.popBackStack()
                                 launchAccessibilitySettings(context)
+                            }
+                            DisclosureType.VpnFilter.name -> {
+                                scope.launch { settingsRepository.recordVpnConsent() }
+                                navController.popBackStack()
+                                launchVpnAccess(context, vpnConsentLauncher::launch)
                             }
                             else -> navController.popBackStack()
                         }
@@ -253,4 +265,17 @@ private fun launchNotificationSettings(context: Context) {
 
 private fun launchAccessibilitySettings(context: Context) {
     runCatching { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+}
+
+// The system dialog reads getCallingPackage(), which Android only fills in for
+// result launches. A plain startActivity makes it finish without showing.
+private fun launchVpnAccess(context: Context, launchForResult: (Intent) -> Unit) {
+    runCatching {
+        val consent = VpnService.prepare(context)
+        if (consent != null) {
+            launchForResult(consent)
+        } else {
+            context.startActivity(Intent(Settings.ACTION_VPN_SETTINGS))
+        }
+    }
 }
