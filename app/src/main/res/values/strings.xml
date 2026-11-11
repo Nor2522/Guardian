@@ -133,6 +133,18 @@
     <string name="duration_less_than_minute">Less than 1 min</string>
     <string name="duration_hours">%1$d h</string>
     <string name="duration_hours_minutes">%1$d h %2$d min</string>
+
+    <!-- Step 6 Block screen -->
+    <string name="block_daily_limit_title">%1$s is paused</string>
+    <string name="block_daily_limit_body">You reached today\'s %1$d minute limit.</string>
+    <string name="block_daily_limit_reset">Starts again tomorrow</string>
+    <string name="block_schedule_title">Apps are paused</string>
+    <string name="block_schedule_body">It is bedtime. Apps are paused until %1$s.</string>
+    <string name="block_schedule_reset">Ends at %1$s</string>
+    <string name="block_why_title">Why is this paused?</string>
+    <string name="block_why_body">Guardian paused %1$s. A parent can change this in Guardian.</string>
+    <string name="block_go_home">Go to Home</string>
+    <string name="block_calls_note">Calls and the clock still work.</string>
     <plurals name="duration_minutes">
         <item quantity="one">%1$d min</item>
         <item quantity="other">%1$d min</item>
