@@ -53,6 +53,7 @@ fun BlockScreen(
     onWhyPaused: () -> Unit,
 ) {
     val reason = (decision as? AccessDecision.Blocked)?.reason
+    var showWhy by remember { mutableStateOf(false) }
 
     val title = when (reason) {
         is BlockReason.DailyLimit -> stringResource(R.string.block_daily_limit_title, appName)
@@ -129,16 +130,18 @@ fun BlockScreen(
         }
     }
 
-    ModalBottomSheet(onDismissRequest = onWhyPaused) {
-        Text(
-            text = stringResource(R.string.block_why_title),
-            style = MaterialTheme.typography.titleLarge,
-        )
-        Spacer(Modifier.size(8.dp))
-        Text(
-            text = stringResource(R.string.block_why_body, appName),
-            style = MaterialTheme.typography.bodyMedium,
-        )
+    if (showWhy) {
+        ModalBottomSheet(onDismissRequest = { showWhy = false }) {
+            Text(
+                text = stringResource(R.string.block_why_title),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Spacer(Modifier.size(8.dp))
+            Text(
+                text = stringResource(R.string.block_why_body, appName),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
     }
 }
 
