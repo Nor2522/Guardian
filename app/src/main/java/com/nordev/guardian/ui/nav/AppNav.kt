@@ -101,6 +101,7 @@ fun GuardianNavHost(
     val currentRoute = backStackEntry?.destination?.route
     val isParentRoute = currentRoute?.startsWith(Routes.PARENT) == true
     val blockedPackage = BlockState.blockedPackage
+    val blockedReason = BlockState.blockedReason
     var showLockWarning by remember { mutableStateOf(false) }
     var requestNotifications by remember { mutableStateOf(false) }
     val vpnConsentLauncher = rememberLauncherForActivityResult(
@@ -275,7 +276,8 @@ fun GuardianNavHost(
             }
         }
         if (blockedPackage != null) {
-            val limitMinutes = BlockState.blockedLimitMinutes ?: 0
+            val decision = blockedReason?.let { AccessDecision.Blocked(it) }
+                ?: AccessDecision.Blocked(BlockReason.DailyLimit(blockedPackage, 0))
             val appInfo = remember(blockedPackage) {
                 runCatching { context.packageManager.getApplicationInfo(blockedPackage, 0) }.getOrNull()
             }
@@ -284,7 +286,7 @@ fun GuardianNavHost(
                     ?.takeIf { it.isNotBlank() } ?: blockedPackage
             }
             BlockScreen(
-                decision = AccessDecision.Blocked(BlockReason.DailyLimit(blockedPackage, limitMinutes)),
+                decision = decision,
                 appName = appName,
                 onGoHome = { BlockState.clear() },
                 onWhyPaused = { },

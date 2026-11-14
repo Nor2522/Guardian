@@ -9,6 +9,7 @@ import com.nordev.guardian.domain.block.AccessDecision
 import com.nordev.guardian.domain.block.BlockReason
 import com.nordev.guardian.domain.block.PolicySnapshot
 import com.nordev.guardian.ui.nav.BlockState
+import java.time.LocalDateTime
 
 // Declared so the user can grant Accessibility in system settings. The service
 // watches window state changes and asks the policy engine whether the focused
@@ -32,9 +33,7 @@ class GuardianAccessibilityService : AccessibilityService() {
         val packageName = window.root?.packageName?.toString() ?: return
         val decision = evaluate(packageName)
         if (decision is AccessDecision.Blocked) {
-            val reason = decision.reason
-            val limitMinutes = (reason as? BlockReason.DailyLimit)?.limitMinutes ?: 0
-            BlockState.block(packageName, limitMinutes)
+            BlockState.block(packageName, decision.reason)
         } else {
             BlockState.clear()
         }
@@ -53,7 +52,7 @@ class GuardianAccessibilityService : AccessibilityService() {
             now - MILLIS_PER_DAY,
             now,
         )?.firstOrNull { it.packageName == packageName }?.totalTimeInForeground ?: 0L
-        return policy.decide(packageName, usedMillis)
+        return policy.decide(packageName, usedMillis, LocalDateTime.now())
     }
 
     override fun onInterrupt() = Unit
