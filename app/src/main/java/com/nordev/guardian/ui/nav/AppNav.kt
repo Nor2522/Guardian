@@ -38,7 +38,11 @@ import com.nordev.guardian.R
 import com.nordev.guardian.data.permissions.DeviceAdminAccessChecker
 import com.nordev.guardian.data.prefs.ParentPinRepository
 import com.nordev.guardian.data.prefs.SettingsRepository
+import com.nordev.guardian.domain.block.AccessDecision
+import com.nordev.guardian.domain.block.BlockReason
 import com.nordev.guardian.service.admin.GuardianDeviceAdminReceiver
+import com.nordev.guardian.ui.components.BlockScreen
+import com.nordev.guardian.ui.nav.BlockState
 import com.nordev.guardian.ui.screens.gate.GateScreen
 import com.nordev.guardian.ui.screens.onboarding.DisclosureScreen
 import com.nordev.guardian.ui.screens.onboarding.DisclosureType
@@ -96,6 +100,7 @@ fun GuardianNavHost(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val isParentRoute = currentRoute?.startsWith(Routes.PARENT) == true
+    val blockedPackage = BlockState.blockedPackage
     var showLockWarning by remember { mutableStateOf(false) }
     var requestNotifications by remember { mutableStateOf(false) }
     val vpnConsentLauncher = rememberLauncherForActivityResult(
@@ -268,6 +273,22 @@ fun GuardianNavHost(
                     onOpenUsageSettings = { launchUsageAccessSettings(context) },
                 )
             }
+        }
+        if (blockedPackage != null) {
+            val limitMinutes = BlockState.blockedLimitMinutes ?: 0
+            val appInfo = remember(blockedPackage) {
+                runCatching { context.packageManager.getApplicationInfo(blockedPackage, 0) }.getOrNull()
+            }
+            val appName = remember(blockedPackage, appInfo) {
+                appInfo?.loadLabel(context.packageManager)?.toString()
+                    ?.takeIf { it.isNotBlank() } ?: blockedPackage
+            }
+            BlockScreen(
+                decision = AccessDecision.Blocked(BlockReason.DailyLimit(blockedPackage, limitMinutes)),
+                appName = appName,
+                onGoHome = { BlockState.clear() },
+                onWhyPaused = { },
+            )
         }
     }
 }

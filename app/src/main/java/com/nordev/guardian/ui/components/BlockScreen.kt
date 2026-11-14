@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -120,6 +121,9 @@ fun BlockScreen(
             Spacer(Modifier.size(28.dp))
             Button(onClick = onGoHome, modifier = Modifier.fillMaxWidth()) {
                 Text(text = stringResource(R.string.block_go_home))
+            }
+            TextButton(onClick = { showWhy = true }) {
+                Text(text = stringResource(R.string.block_why_title))
             }
             Spacer(Modifier.size(8.dp))
             Text(

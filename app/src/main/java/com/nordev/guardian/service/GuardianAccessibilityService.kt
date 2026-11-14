@@ -6,6 +6,7 @@ import android.content.Context
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityWindowInfo
 import com.nordev.guardian.domain.block.AccessDecision
+import com.nordev.guardian.domain.block.BlockReason
 import com.nordev.guardian.domain.block.PolicySnapshot
 import com.nordev.guardian.ui.nav.BlockState
 
@@ -15,6 +16,11 @@ import com.nordev.guardian.ui.nav.BlockState
 // window content.
 class GuardianAccessibilityService : AccessibilityService() {
     private var policy = PolicySnapshot(emptyMap())
+
+    override fun onCreate() {
+        super.onCreate()
+        GuardianAccessibilityService.instance = this
+    }
 
     fun setPolicy(snapshot: PolicySnapshot) {
         policy = snapshot
@@ -26,7 +32,11 @@ class GuardianAccessibilityService : AccessibilityService() {
         val packageName = window.root?.packageName?.toString() ?: return
         val decision = evaluate(packageName)
         if (decision is AccessDecision.Blocked) {
-            BlockState.block(packageName)
+            val reason = decision.reason
+            val limitMinutes = (reason as? BlockReason.DailyLimit)?.limitMinutes ?: 0
+            BlockState.block(packageName, limitMinutes)
+        } else {
+            BlockState.clear()
         }
     }
 
@@ -50,5 +60,9 @@ class GuardianAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val MILLIS_PER_DAY = 86_400_000L
+
+        @Volatile
+        var instance: GuardianAccessibilityService? = null
+            private set
     }
 }

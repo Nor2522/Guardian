@@ -152,8 +152,14 @@ class UsageRepository(private val context: Context) {
         close(now)
     }
 
+    // Parent-facing list of launchable apps for the limits picker. Labels only;
+    // icons load lazily on the screens that show them.
+    fun launchableAppLabels(): List<Pair<String, String>> =
+        launchableApps()
+            .map { (packageName, entry) -> packageName to entry.label }
+            .sortedBy { it.second.lowercase() }
+
     private fun launchableApps(): Map<String, AppEntry> {
-        cachedApps?.let { return it }
         val packageManager = context.packageManager
         val launchIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         val hidden = homePackages(packageManager) + SYSTEM_UI

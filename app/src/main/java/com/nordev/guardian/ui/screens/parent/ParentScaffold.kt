@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -34,6 +35,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.nordev.guardian.R
 import com.nordev.guardian.data.usage.UsageSnapshot
+import com.nordev.guardian.domain.block.PolicySnapshot
+import com.nordev.guardian.service.GuardianAccessibilityService
 import com.nordev.guardian.ui.nav.Routes
 import com.nordev.guardian.ui.nav.ThemeMode
 
@@ -65,6 +68,7 @@ fun ParentScaffold(
     val showBottomBar = currentRoute != Routes.PARENT_SETTINGS
     val snackbarHostState = remember { SnackbarHostState() }
     val warningText = stringResource(R.string.parent_session_warning)
+    val limitsState = remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
 
     LaunchedEffect(showLockWarning) {
         if (showLockWarning) {
@@ -100,7 +104,22 @@ fun ParentScaffold(
                 )
             }
             composable(Routes.PARENT_LIMITS) {
-                LimitsScreen(onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) })
+                LimitsScreen(
+                    onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) },
+                    limits = limitsState.value,
+                    onEditLimit = { packageName, minutes ->
+                        val updated = limitsState.value.toMutableMap().apply {
+                            if (minutes > 0) {
+                                put(packageName, minutes)
+                            } else {
+                                remove(packageName)
+                            }
+                        }
+                        limitsState.value = updated
+                        GuardianAccessibilityService.instance?.setPolicy(PolicySnapshot(updated))
+                    },
+                    usage = usage,
+                )
             }
             composable(Routes.PARENT_SCHEDULES) {
                 SchedulesScreen(onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) })
