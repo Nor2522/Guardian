@@ -209,6 +209,11 @@
     <string name="schedules_editor_error_study">Study time needs at least one allowed app.</string>
 
     <!-- Web -->
+    <string name="filter_channel_name">Website filter</string>
+    <string name="filter_channel_description">Shows while Guardian checks website names on this phone.</string>
+    <string name="filter_notification_title">Website filter is on</string>
+    <string name="filter_notification_text">Checking website names on this phone</string>
+    <string name="filter_session_name">Guardian website filter</string>
     <string name="web_filter_off_title">Website filter is off</string>
     <string name="web_filter_off_body">Adult sites and your blocked sites can load. App limits and schedules keep working.</string>
     <string name="section_blocked_sites">Blocked sites</string>

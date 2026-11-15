@@ -7,6 +7,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.nordev.guardian.domain.block.PolicyCodec
 import com.nordev.guardian.domain.block.PolicySnapshot
 import com.nordev.guardian.domain.model.Schedule
+import com.nordev.guardian.domain.web.WebFilterCodec
+import com.nordev.guardian.domain.web.WebFilterPolicy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -24,6 +26,10 @@ class PolicyRepository(context: Context) {
         )
     }
 
+    val webFilter: Flow<WebFilterPolicy> = store.data.map { prefs ->
+        WebFilterCodec.decode(prefs[WEB_V1].orEmpty())
+    }
+
     suspend fun saveLimits(limits: Map<String, Int>) {
         val encoded = PolicyCodec.encodeLimits(limits)
         store.edit { it[LIMITS_V1] = encoded }
@@ -34,8 +40,14 @@ class PolicyRepository(context: Context) {
         store.edit { it[SCHEDULES_V1] = encoded }
     }
 
+    suspend fun saveWebFilter(policy: WebFilterPolicy) {
+        val encoded = WebFilterCodec.encode(policy)
+        store.edit { it[WEB_V1] = encoded }
+    }
+
     private companion object {
         val LIMITS_V1 = stringPreferencesKey("limits_v1")
         val SCHEDULES_V1 = stringPreferencesKey("schedules_v1")
+        val WEB_V1 = stringPreferencesKey("web_v1")
     }
 }

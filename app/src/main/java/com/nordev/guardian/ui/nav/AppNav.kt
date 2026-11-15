@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -40,6 +41,8 @@ import com.nordev.guardian.data.permissions.DeviceAdminAccessChecker
 import com.nordev.guardian.data.prefs.ParentPinRepository
 import com.nordev.guardian.data.prefs.PolicyRepository
 import com.nordev.guardian.data.prefs.SettingsRepository
+import com.nordev.guardian.domain.web.WebFilterPolicy
+import com.nordev.guardian.service.DnsFilterVpnService
 import com.nordev.guardian.service.admin.GuardianDeviceAdminReceiver
 import com.nordev.guardian.ui.screens.gate.GateScreen
 import com.nordev.guardian.ui.screens.onboarding.DisclosureScreen
@@ -95,6 +98,9 @@ fun GuardianNavHost(
     val session = viewModel<ParentSessionViewModel>().session
     val usageViewModel = viewModel<UsageViewModel>()
     val usage by usageViewModel.state.collectAsState()
+    val webFilter by remember(policyRepository) { policyRepository.webFilter }
+        .collectAsState(initial = WebFilterPolicy.Default)
+    val filterEnabled = rememberUpdatedState(webFilter.enabled)
     val lifecycleOwner = LocalLifecycleOwner.current
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -103,7 +109,11 @@ fun GuardianNavHost(
     var requestNotifications by remember { mutableStateOf(false) }
     val vpnConsentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
-    ) { }
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK && VpnService.prepare(context) == null) {
+            DnsFilterVpnService.start(context)
+        }
+    }
 
     // Background, screen off, and recents all stop the activity; that lock is
     // separate from the five idle minutes counted below. A configuration change
@@ -115,10 +125,23 @@ fun GuardianNavHost(
             if (event == Lifecycle.Event.ON_STOP && activity?.isChangingConfigurations != true) {
                 session.lock()
             }
-            if (event == Lifecycle.Event.ON_RESUME) usageViewModel.refresh()
+            if (event == Lifecycle.Event.ON_RESUME) {
+                usageViewModel.refresh()
+                if (filterEnabled.value) ensureFilterStarted(context)
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // The switch is on by default, but the tunnel needs the system consent. This
+    // runs on first composition and whenever the stored switch changes.
+    LaunchedEffect(webFilter.enabled) {
+        if (webFilter.enabled) {
+            ensureFilterStarted(context)
+        } else {
+            DnsFilterVpnService.stop(context)
+        }
     }
 
     // Back-stack guard: a restored parent route never shows without an unlock.
@@ -283,6 +306,16 @@ fun GuardianNavHost(
 
 private fun launchUsageAccessSettings(context: Context) {
     runCatching { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
+}
+
+// startForegroundService throws when the system grant is missing or the caller
+// is in the background. Both are expected while onboarding, so check first and
+// let the Web tab report a filter that is not running.
+private fun ensureFilterStarted(context: Context) {
+    if (DnsFilterVpnService.isRunning()) return
+    runCatching {
+        if (VpnService.prepare(context) == null) DnsFilterVpnService.start(context)
+    }
 }
 
 private fun launchNotificationSettings(context: Context) {

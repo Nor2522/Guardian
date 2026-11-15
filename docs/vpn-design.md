@@ -8,9 +8,12 @@ pages, or hide the phone's address.
 
 `DnsFilterVpnService` is a `VpnService` with a DNS-only tunnel:
 
-- Tunnel addresses `10.111.222.1/32` and `fd00:1111:2222::1/128`.
-- The same two addresses are the DNS servers advertised to the phone.
-- Routes cover only the two server addresses, so all other traffic stays on
+- Tunnel interface addresses `10.111.222.1/32` and `fd00:1111:2222::1/128`.
+- The DNS servers advertised to the phone are `10.111.222.2` and
+  `fd00:1111:2222::2`. They differ from the interface addresses on purpose: an
+  address owned by the interface is delivered locally by the kernel, so a query
+  to it would never appear on the tunnel file descriptor.
+- Routes cover only the two DNS server addresses, so all other traffic stays on
   the phone's normal network path.
 - `addDisallowedApplication(packageName)` keeps Guardian's own upstream
   sockets out of its tunnel.
@@ -23,8 +26,8 @@ pages, or hide the phone's address.
 
 ## Packet path
 
-1. An app resolves a name and sends a UDP query to `10.111.222.1:53` or
-   `[fd00:1111:2222::1]:53`. That packet enters the tunnel.
+1. An app resolves a name and sends a UDP query to `10.111.222.2:53` or
+   `[fd00:1111:2222::2]:53`. That packet enters the tunnel.
 2. A reader thread parses the IPv4 or IPv6 header, then UDP, then the DNS
    question. No other protocol is answered.
 3. If the name matches the shipped adult list or a custom domain, the service
