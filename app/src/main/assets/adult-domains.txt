@@ -1,0 +1,25 @@
+# Guardian adult domain list
+# version: 2026.11
+# license: Guardian seed list. The domain names are facts; the compilation is
+#          part of Guardian and ships with the app.
+# source: authored for Guardian
+# notes: one domain per line. A domain also blocks its subdomains.
+pornhub.com
+xvideos.com
+xnxx.com
+xhamster.com
+redtube.com
+youporn.com
+spankbang.com
+brazzers.com
+chaturbate.com
+livejasmin.com
+onlyfans.com
+adultfriendfinder.com
+literotica.com
+motherless.com
+nhentai.net
+hanime.tv
+hentaihaven.xxx
+rule34.xxx
+e621.net
