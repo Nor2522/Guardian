@@ -5,11 +5,19 @@ import com.nordev.guardian.domain.model.ScheduleMode
 import com.nordev.guardian.domain.schedule.ScheduleWindow
 import java.time.LocalDateTime
 
-class PolicySnapshot(
-    private val limits: Map<String, Int>,
-    private val schedules: List<Schedule> = emptyList(),
+// The parent's rules travel together: daily limits and schedule windows are one
+// snapshot for the policy engine and one unit for storage.
+data class PolicySnapshot(
+    val limits: Map<String, Int> = emptyMap(),
+    val schedules: List<Schedule> = emptyList(),
 ) {
-    fun decide(packageName: String, usedMillisToday: Long, now: LocalDateTime = LocalDateTime.now()): AccessDecision {
+    fun decide(
+        packageName: String,
+        usedMillisToday: Long,
+        now: LocalDateTime = LocalDateTime.now(),
+        alwaysAllowed: Set<String> = emptySet(),
+    ): AccessDecision {
+        if (packageName in alwaysAllowed) return AccessDecision.Allowed
         val blocking = schedules.asSequence()
             .filter { it.enabled }
             .mapNotNull { schedule -> ScheduleWindow.activeEnd(schedule, now)?.let { end -> schedule to end } }

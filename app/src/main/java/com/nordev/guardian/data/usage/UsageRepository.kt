@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import androidx.core.graphics.drawable.toBitmap
 import com.nordev.guardian.data.permissions.UsageAccessChecker
+import com.nordev.guardian.domain.block.AlwaysAllowed
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -162,7 +163,7 @@ class UsageRepository(private val context: Context) {
     private fun launchableApps(): Map<String, AppEntry> {
         val packageManager = context.packageManager
         val launchIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-        val hidden = homePackages(packageManager) + SYSTEM_UI
+        val hidden = homePackages(packageManager) + AlwaysAllowed.packages + context.packageName
         val apps = mutableMapOf<String, AppEntry>()
         packageManager.queryIntentActivities(launchIntent, 0).forEach { resolved ->
             val packageName = resolved.activityInfo.packageName
@@ -199,7 +200,6 @@ class UsageRepository(private val context: Context) {
     private data class AppEntry(val label: String, val appInfo: ApplicationInfo)
 
     private companion object {
-        const val SYSTEM_UI = "com.android.systemui"
         const val ANDROID = "android"
     }
 }

@@ -113,6 +113,24 @@ class PolicySnapshotTest {
     }
 
     @Test
+    fun alwaysAllowedPackageIsNeverBlocked() {
+        val policy = PolicySnapshot(
+            mapOf("com.sec.android.app.clockpackage" to 5),
+            listOf(bedtime(days = setOf(DayOfWeek.MONDAY))),
+        )
+
+        assertEquals(
+            AccessDecision.Allowed,
+            policy.decide(
+                packageName = "com.sec.android.app.clockpackage",
+                usedMillisToday = 999 * 60_000L,
+                now = LocalDateTime.of(2026, 11, 16, 23, 0),
+                alwaysAllowed = AlwaysAllowed.packages,
+            ),
+        )
+    }
+
+    @Test
     fun disabledScheduleDoesNothing() {
         val policy = PolicySnapshot(
             emptyMap(),

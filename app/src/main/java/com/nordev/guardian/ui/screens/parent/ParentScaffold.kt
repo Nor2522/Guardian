@@ -21,9 +21,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -34,12 +35,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.nordev.guardian.R
+import com.nordev.guardian.data.prefs.PolicyRepository
 import com.nordev.guardian.data.usage.UsageSnapshot
 import com.nordev.guardian.domain.block.PolicySnapshot
-import com.nordev.guardian.domain.model.Schedule
-import com.nordev.guardian.service.GuardianAccessibilityService
 import com.nordev.guardian.ui.nav.Routes
 import com.nordev.guardian.ui.nav.ThemeMode
+import kotlinx.coroutines.launch
 
 private class ParentTab(
     val route: String,
@@ -62,6 +63,7 @@ fun ParentScaffold(
     showLockWarning: Boolean,
     usage: UsageSnapshot?,
     onOpenUsageSettings: () -> Unit,
+    policyRepository: PolicyRepository,
 ) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -69,8 +71,8 @@ fun ParentScaffold(
     val showBottomBar = currentRoute != Routes.PARENT_SETTINGS
     val snackbarHostState = remember { SnackbarHostState() }
     val warningText = stringResource(R.string.parent_session_warning)
-    val limitsState = remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
-    val schedulesState = remember { mutableStateOf<List<Schedule>>(emptyList()) }
+    val scope = rememberCoroutineScope()
+    val policy by policyRepository.snapshot.collectAsState(initial = PolicySnapshot())
 
     LaunchedEffect(showLockWarning) {
         if (showLockWarning) {
@@ -108,19 +110,16 @@ fun ParentScaffold(
             composable(Routes.PARENT_LIMITS) {
                 LimitsScreen(
                     onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) },
-                    limits = limitsState.value,
+                    limits = policy.limits,
                     onEditLimit = { packageName, minutes ->
-                        val updated = limitsState.value.toMutableMap().apply {
+                        val updated = policy.limits.toMutableMap().apply {
                             if (minutes > 0) {
                                 put(packageName, minutes)
                             } else {
                                 remove(packageName)
                             }
                         }
-                        limitsState.value = updated
-                        GuardianAccessibilityService.instance?.setPolicy(
-                            PolicySnapshot(updated, schedulesState.value),
-                        )
+                        scope.launch { policyRepository.saveLimits(updated) }
                     },
                     usage = usage,
                 )
@@ -128,20 +127,14 @@ fun ParentScaffold(
             composable(Routes.PARENT_SCHEDULES) {
                 SchedulesScreen(
                     onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) },
-                    schedules = schedulesState.value,
+                    schedules = policy.schedules,
                     onSaveSchedule = { schedule ->
-                        val updated = schedulesState.value.filterNot { it.id == schedule.id } + schedule
-                        schedulesState.value = updated
-                        GuardianAccessibilityService.instance?.setPolicy(
-                            PolicySnapshot(limitsState.value, updated),
-                        )
+                        val updated = policy.schedules.filterNot { it.id == schedule.id } + schedule
+                        scope.launch { policyRepository.saveSchedules(updated) }
                     },
                     onDeleteSchedule = { scheduleId ->
-                        val updated = schedulesState.value.filterNot { it.id == scheduleId }
-                        schedulesState.value = updated
-                        GuardianAccessibilityService.instance?.setPolicy(
-                            PolicySnapshot(limitsState.value, updated),
-                        )
+                        val updated = policy.schedules.filterNot { it.id == scheduleId }
+                        scope.launch { policyRepository.saveSchedules(updated) }
                     },
                 )
             }

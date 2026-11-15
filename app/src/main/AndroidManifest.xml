@@ -37,6 +37,14 @@
             </intent-filter>
         </activity>
 
+        <!-- Own empty-affinity task, never in recents, shown over the paused app. -->
+        <activity
+            android:name=".ui.block.BlockActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="" />
+
         <service
             android:name=".service.GuardianAccessibilityService"
             android:exported="false"
