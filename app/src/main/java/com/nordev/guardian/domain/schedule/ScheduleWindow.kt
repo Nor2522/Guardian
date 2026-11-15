@@ -40,4 +40,14 @@ object ScheduleWindow {
 
     // Time of day the window lifts, for the block screen copy.
     fun untilTime(schedule: Schedule): LocalTime = endTime(schedule)
+
+    // Interval overlap for the informational overlap note. A window that crosses
+    // midnight ends the next day, so its exclusive end moves past one day.
+    fun overlaps(a: Schedule, b: Schedule): Boolean {
+        val endA = a.endMinute + if (a.endMinute < a.startMinute) MINUTES_PER_DAY else 0
+        val endB = b.endMinute + if (b.endMinute < b.startMinute) MINUTES_PER_DAY else 0
+        return maxOf(a.startMinute, b.startMinute) < minOf(endA, endB)
+    }
+
+    private const val MINUTES_PER_DAY = 1440
 }

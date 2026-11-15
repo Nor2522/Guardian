@@ -36,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import com.nordev.guardian.R
 import com.nordev.guardian.data.usage.UsageSnapshot
 import com.nordev.guardian.domain.block.PolicySnapshot
+import com.nordev.guardian.domain.model.Schedule
 import com.nordev.guardian.service.GuardianAccessibilityService
 import com.nordev.guardian.ui.nav.Routes
 import com.nordev.guardian.ui.nav.ThemeMode
@@ -69,6 +70,7 @@ fun ParentScaffold(
     val snackbarHostState = remember { SnackbarHostState() }
     val warningText = stringResource(R.string.parent_session_warning)
     val limitsState = remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
+    val schedulesState = remember { mutableStateOf<List<Schedule>>(emptyList()) }
 
     LaunchedEffect(showLockWarning) {
         if (showLockWarning) {
@@ -122,7 +124,24 @@ fun ParentScaffold(
                 )
             }
             composable(Routes.PARENT_SCHEDULES) {
-                SchedulesScreen(onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) })
+                SchedulesScreen(
+                    onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) },
+                    schedules = schedulesState.value,
+                    onSaveSchedule = { schedule ->
+                        val updated = schedulesState.value.filterNot { it.id == schedule.id } + schedule
+                        schedulesState.value = updated
+                        GuardianAccessibilityService.instance?.setPolicy(
+                            PolicySnapshot(limitsState.value, updated),
+                        )
+                    },
+                    onDeleteSchedule = { scheduleId ->
+                        val updated = schedulesState.value.filterNot { it.id == scheduleId }
+                        schedulesState.value = updated
+                        GuardianAccessibilityService.instance?.setPolicy(
+                            PolicySnapshot(limitsState.value, updated),
+                        )
+                    },
+                )
             }
             composable(Routes.PARENT_WEB) {
                 WebScreen(onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) })

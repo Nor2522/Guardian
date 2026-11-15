@@ -183,6 +183,29 @@
     <string name="schedules_add">Add schedule</string>
     <string name="empty_schedules_title">No schedules yet</string>
     <string name="empty_schedules_body">Add bedtime or study hours. Apps pause automatically during a schedule.</string>
+    <string name="section_schedules">Schedules</string>
+    <string name="schedules_overlaps">Overlaps %1$s. The stricter schedule applies.</string>
+    <string name="schedules_editor_new_title">New schedule</string>
+    <string name="schedules_editor_name">Name</string>
+    <string name="schedules_editor_name_hint">1 to 40 characters</string>
+    <string name="schedules_editor_days">Days</string>
+    <string name="schedules_editor_starts">Starts</string>
+    <string name="schedules_editor_ends">Ends</string>
+    <string name="schedules_editor_mode_pause_all">Pause all apps</string>
+    <string name="schedules_editor_mode_study">Study time</string>
+    <string name="schedules_editor_study_title">Allowed apps</string>
+    <string name="schedules_editor_study_empty">No study apps yet. Add the apps that should stay open.</string>
+    <string name="schedules_editor_enabled">Enabled</string>
+    <string name="schedules_editor_save">Save</string>
+    <string name="schedules_editor_delete">Delete schedule</string>
+    <string name="schedules_editor_delete_title">Delete schedule?</string>
+    <string name="schedules_editor_delete_body">Delete %1$s? Apps will follow the remaining rules.</string>
+    <string name="schedules_editor_delete_confirm">Delete</string>
+    <string name="schedules_editor_cancel">Cancel</string>
+    <string name="schedules_editor_error_name">Schedule name must be 1 to 40 characters.</string>
+    <string name="schedules_editor_error_days">A schedule needs at least one day.</string>
+    <string name="schedules_editor_error_times">Start and end times must be different.</string>
+    <string name="schedules_editor_error_study">Study time needs at least one allowed app.</string>
 
     <!-- Web -->
     <string name="web_filter_off_title">Website filter is off</string>

@@ -257,7 +257,7 @@ private fun LimitRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppPickerSheet(
+fun AppPickerSheet(
     apps: List<Pair<String, String>>,
     limits: Map<String, Int>,
     onSelect: (String, Int) -> Unit,
