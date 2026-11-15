@@ -32,6 +32,12 @@ class DomainNameTest {
     }
 
     @Test
+    fun displaysStoredPunycodeAsUnicode() {
+        assertEquals("münchen.de", DomainName.display("xn--mnchen-3ya.de"))
+        assertEquals("example.com", DomainName.display("example.com"))
+    }
+
+    @Test
     fun rejectsValuesThatAreNotDomains() {
         assertNull(DomainName.normalize(""))
         assertNull(DomainName.normalize("example"))

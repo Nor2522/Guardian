@@ -41,7 +41,6 @@ import com.nordev.guardian.data.permissions.DeviceAdminAccessChecker
 import com.nordev.guardian.data.prefs.ParentPinRepository
 import com.nordev.guardian.data.prefs.PolicyRepository
 import com.nordev.guardian.data.prefs.SettingsRepository
-import com.nordev.guardian.domain.web.WebFilterPolicy
 import com.nordev.guardian.service.DnsFilterVpnService
 import com.nordev.guardian.service.admin.GuardianDeviceAdminReceiver
 import com.nordev.guardian.ui.screens.gate.GateScreen
@@ -75,6 +74,7 @@ object Routes {
     const val PARENT_LIMITS = "parent/limits"
     const val PARENT_SCHEDULES = "parent/schedules"
     const val PARENT_WEB = "parent/web"
+    const val PARENT_WEB_ADD = "parent/web/add"
     const val PARENT_SETTINGS = "parent/settings"
 
     fun disclosureRoute(type: DisclosureType): String = "onboarding/disclosure/${type.name}"
@@ -99,8 +99,8 @@ fun GuardianNavHost(
     val usageViewModel = viewModel<UsageViewModel>()
     val usage by usageViewModel.state.collectAsState()
     val webFilter by remember(policyRepository) { policyRepository.webFilter }
-        .collectAsState(initial = WebFilterPolicy.Default)
-    val filterEnabled = rememberUpdatedState(webFilter.enabled)
+        .collectAsState(initial = null)
+    val filterEnabled = rememberUpdatedState(webFilter?.enabled)
     val lifecycleOwner = LocalLifecycleOwner.current
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -127,7 +127,7 @@ fun GuardianNavHost(
             }
             if (event == Lifecycle.Event.ON_RESUME) {
                 usageViewModel.refresh()
-                if (filterEnabled.value) ensureFilterStarted(context)
+                if (filterEnabled.value == true) ensureFilterStarted(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -135,12 +135,13 @@ fun GuardianNavHost(
     }
 
     // The switch is on by default, but the tunnel needs the system consent. This
-    // runs on first composition and whenever the stored switch changes.
-    LaunchedEffect(webFilter.enabled) {
-        if (webFilter.enabled) {
-            ensureFilterStarted(context)
-        } else {
-            DnsFilterVpnService.stop(context)
+    // waits for the stored value: the optimistic default would start the filter
+    // for a moment even when the parent had turned it off.
+    LaunchedEffect(webFilter?.enabled) {
+        when (webFilter?.enabled) {
+            true -> ensureFilterStarted(context)
+            false -> DnsFilterVpnService.stop(context)
+            null -> Unit
         }
     }
 
@@ -297,6 +298,20 @@ fun GuardianNavHost(
                     showLockWarning = showLockWarning && isParentRoute,
                     usage = usage,
                     onOpenUsageSettings = { launchUsageAccessSettings(context) },
+                    onTurnOnFilter = {
+                        val consent = VpnService.prepare(context)
+                        if (consent != null) {
+                            vpnConsentLauncher.launch(consent)
+                        } else {
+                            ensureFilterStarted(context)
+                        }
+                    },
+                    onOpenVpnSettings = {
+                        runCatching { context.startActivity(Intent(Settings.ACTION_VPN_SETTINGS)) }
+                    },
+                    onOpenNetworkSettings = {
+                        runCatching { context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS)) }
+                    },
                     policyRepository = policyRepository,
                 )
             }

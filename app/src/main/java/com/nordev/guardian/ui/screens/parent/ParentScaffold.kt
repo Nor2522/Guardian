@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -37,7 +38,9 @@ import androidx.navigation.compose.rememberNavController
 import com.nordev.guardian.R
 import com.nordev.guardian.data.prefs.PolicyRepository
 import com.nordev.guardian.data.usage.UsageSnapshot
+import com.nordev.guardian.data.web.BlocklistRepository
 import com.nordev.guardian.domain.block.PolicySnapshot
+import com.nordev.guardian.domain.web.WebFilterPolicy
 import com.nordev.guardian.ui.nav.Routes
 import com.nordev.guardian.ui.nav.ThemeMode
 import kotlinx.coroutines.launch
@@ -63,16 +66,23 @@ fun ParentScaffold(
     showLockWarning: Boolean,
     usage: UsageSnapshot?,
     onOpenUsageSettings: () -> Unit,
+    onTurnOnFilter: () -> Unit,
+    onOpenVpnSettings: () -> Unit,
+    onOpenNetworkSettings: () -> Unit,
     policyRepository: PolicyRepository,
 ) {
     val navController = rememberNavController()
+    val context = LocalContext.current
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    val showBottomBar = currentRoute != Routes.PARENT_SETTINGS
+    val showBottomBar = currentRoute != Routes.PARENT_SETTINGS && currentRoute != Routes.PARENT_WEB_ADD
     val snackbarHostState = remember { SnackbarHostState() }
     val warningText = stringResource(R.string.parent_session_warning)
     val scope = rememberCoroutineScope()
     val policy by policyRepository.snapshot.collectAsState(initial = PolicySnapshot())
+    val webFilter by remember(policyRepository) { policyRepository.webFilter }
+        .collectAsState(initial = WebFilterPolicy.Default)
+    val adultList = remember(context) { BlocklistRepository(context).adultList() }
 
     LaunchedEffect(showLockWarning) {
         if (showLockWarning) {
@@ -139,7 +149,47 @@ fun ParentScaffold(
                 )
             }
             composable(Routes.PARENT_WEB) {
-                WebScreen(onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) })
+                WebScreen(
+                    policy = webFilter,
+                    adultListVersion = adultList.version,
+                    adultListCount = adultList.domains.size,
+                    onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) },
+                    onSetEnabled = { enabled ->
+                        scope.launch {
+                            policyRepository.saveWebFilter(webFilter.copy(enabled = enabled))
+                            // Start only after the stored switch is true, so the
+                            // service's own policy collector does not stop it
+                            // while it is still reading the old value.
+                            if (enabled) onTurnOnFilter()
+                        }
+                    },
+                    onAddSite = { navController.navigate(Routes.PARENT_WEB_ADD) },
+                    onRemoveSite = { domain ->
+                        scope.launch {
+                            policyRepository.saveWebFilter(
+                                webFilter.copy(customDomains = webFilter.customDomains - domain),
+                            )
+                        }
+                    },
+                    onTurnOnFilter = onTurnOnFilter,
+                    onOpenVpnSettings = onOpenVpnSettings,
+                    onOpenNetworkSettings = onOpenNetworkSettings,
+                )
+            }
+            composable(Routes.PARENT_WEB_ADD) {
+                AddSiteScreen(
+                    existingDomains = webFilter.customDomains,
+                    adultDomains = adultList.domains,
+                    onBack = { navController.popBackStack() },
+                    onSave = { domain ->
+                        scope.launch {
+                            policyRepository.saveWebFilter(
+                                webFilter.copy(customDomains = webFilter.customDomains + domain),
+                            )
+                        }
+                        navController.popBackStack()
+                    },
+                )
             }
             composable(Routes.PARENT_SETTINGS) {
                 SettingsScreen(

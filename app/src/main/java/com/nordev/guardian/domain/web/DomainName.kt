@@ -48,4 +48,11 @@ object DomainName {
         if (labels.all { label -> label.all { it in '0'..'9' } }) return null
         return host
     }
+
+    // Stored domains are punycode. Show the Unicode form back to the parent so
+    // non-Latin sites stay readable.
+    fun display(domain: String): String =
+        runCatching { IDN.toUnicode(domain, IDN.ALLOW_UNASSIGNED) }
+            .getOrDefault(domain)
+            .ifEmpty { domain }
 }

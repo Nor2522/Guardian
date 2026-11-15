@@ -64,6 +64,9 @@ class DnsFilterVpnService : VpnService() {
     private var output: FileOutputStream? = null
     private var reader: Thread? = null
 
+    @Volatile
+    private var policyEnabled = true
+
     override fun onCreate() {
         super.onCreate()
         createChannel()
@@ -72,43 +75,60 @@ class DnsFilterVpnService : VpnService() {
         scope.launch {
             policyRepository.webFilter.collect { policy ->
                 customMatcher = DomainMatcher(policy.customDomains)
-                // Turning the switch off stops the tunnel; the notification goes
-                // away with it because onDestroy removes the foreground state.
-                if (!policy.enabled && running) stopSelf()
+                policyEnabled = policy.enabled
+                // Turning the switch off tears the tunnel down now. The system
+                // keeps a VPN service bound, so stopSelf alone would not reach
+                // onDestroy and the tunnel would keep filtering.
+                if (!policy.enabled) stopFilter()
             }
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
-            stopSelf()
+            stopFilter()
             return START_NOT_STICKY
         }
-        if (running) return START_STICKY
-        startForeground(NOTIFICATION_ID, buildNotification())
-        val descriptor = try {
-            establishTunnel()
-        } catch (_: Exception) {
-            null
+        synchronized(this) {
+            if (running) return START_STICKY
+            startForeground(NOTIFICATION_ID, buildNotification())
+            val descriptor = try {
+                establishTunnel()
+            } catch (_: Exception) {
+                null
+            }
+            if (descriptor == null) {
+                Log.w(TAG, "tunnel not established")
+                stopFilter()
+                return START_NOT_STICKY
+            }
+            tunnel = descriptor
+            output = FileOutputStream(descriptor.fileDescriptor)
+            running = true
+            reader = Thread({ readLoop(descriptor) }, "guardian-dns-reader").apply { start() }
+            if (BuildConfig.DEBUG) Log.d(TAG, "filter up")
+            // The switch may have turned off while the tunnel was being set up.
+            if (!policyEnabled) {
+                stopFilter()
+                return START_NOT_STICKY
+            }
+            return START_STICKY
         }
-        if (descriptor == null) {
-            Log.w(TAG, "tunnel not established")
-            stopSelf()
-            return START_NOT_STICKY
-        }
-        tunnel = descriptor
-        output = FileOutputStream(descriptor.fileDescriptor)
-        running = true
-        reader = Thread({ readLoop(descriptor) }, "guardian-dns-reader").apply { start() }
-        if (BuildConfig.DEBUG) Log.d(TAG, "filter up")
-        return START_STICKY
     }
 
     override fun onRevoke() {
+        stopFilter()
+    }
+
+    @Synchronized
+    private fun stopFilter() {
+        closeTunnel()
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
-    override fun onDestroy() {
+    @Synchronized
+    private fun closeTunnel() {
         running = false
         try {
             tunnel?.close()
@@ -118,6 +138,10 @@ class DnsFilterVpnService : VpnService() {
         output = null
         reader?.interrupt()
         reader = null
+    }
+
+    override fun onDestroy() {
+        closeTunnel()
         forwarder.shutdownNow()
         scope.cancel()
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -218,6 +242,9 @@ class DnsFilterVpnService : VpnService() {
         return current.firstOrNull { (it is Inet6Address) == ipv6 } ?: current.firstOrNull()
     }
 
+    // getAllNetworks is deprecated in API 37 but remains the only synchronous
+    // way to enumerate every active tunnel in one pass.
+    @Suppress("DEPRECATION")
     private fun refreshUpstream() {
         val manager = getSystemService(ConnectivityManager::class.java) ?: return
         val found = linkedSetOf<InetAddress>()
@@ -312,9 +339,9 @@ class DnsFilterVpnService : VpnService() {
         private const val FORWARD_THREADS = 4
         private const val UPSTREAM_TIMEOUT_MS = 4_000
         private const val UPSTREAM_REFRESH_MS = 60_000L
-        private const val ADDRESS_V4 = "10.111.222.1"
+        internal const val ADDRESS_V4 = "10.111.222.1"
         private const val DNS_V4 = "10.111.222.2"
-        private const val ADDRESS_V6 = "fd00:1111:2222::1"
+        internal const val ADDRESS_V6 = "fd00:1111:2222::1"
         private const val DNS_V6 = "fd00:1111:2222::2"
 
         // The DNS server address must not be an address of the tunnel interface,
@@ -344,7 +371,17 @@ class DnsFilterVpnService : VpnService() {
         }
 
         fun stop(context: Context) {
-            context.stopService(Intent(context, DnsFilterVpnService::class.java))
+            // A VPN service is bound by the system, so stopService does not call
+            // onDestroy. Send an explicit stop that tears the interface down.
+            if (!running) {
+                context.stopService(Intent(context, DnsFilterVpnService::class.java))
+                return
+            }
+            runCatching {
+                context.startService(
+                    Intent(context, DnsFilterVpnService::class.java).setAction(ACTION_STOP),
+                )
+            }
         }
     }
 }
