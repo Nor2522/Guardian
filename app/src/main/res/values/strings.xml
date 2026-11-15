@@ -195,6 +195,7 @@
     <string name="schedules_editor_mode_study">Study time</string>
     <string name="schedules_editor_study_title">Allowed apps</string>
     <string name="schedules_editor_study_empty">No study apps yet. Add the apps that should stay open.</string>
+    <string name="schedules_editor_study_add">Add app</string>
     <string name="schedules_editor_enabled">Enabled</string>
     <string name="schedules_editor_save">Save</string>
     <string name="schedules_editor_delete">Delete schedule</string>

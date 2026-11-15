@@ -59,6 +59,7 @@ import com.nordev.guardian.ui.components.EmptyState
 import com.nordev.guardian.ui.components.GuardianTopBar
 import com.nordev.guardian.ui.components.SectionHeader
 import java.time.DayOfWeek
+import java.util.UUID
 
 private const val DEFAULT_START_MINUTE = 22 * 60
 private const val DEFAULT_END_MINUTE = 7 * 60
@@ -91,7 +92,7 @@ fun SchedulesScreen(
             )
             Spacer(Modifier.height(16.dp))
             FilledTonalButton(
-                onClick = { editing = newSchedule(schedules); editorOpen = true },
+                onClick = { editing = null; editorOpen = true },
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -119,7 +120,7 @@ fun SchedulesScreen(
                     title = stringResource(R.string.empty_schedules_title),
                     body = stringResource(R.string.empty_schedules_body),
                     actionLabel = stringResource(R.string.schedules_add),
-                    onAction = { editing = newSchedule(schedules); editorOpen = true },
+                    onAction = { editing = null; editorOpen = true },
                 )
             } else {
                 schedules.forEach { schedule ->
@@ -138,7 +139,6 @@ fun SchedulesScreen(
     if (editorOpen) {
         ScheduleEditor(
             initial = editing,
-            schedules = schedules,
             onSave = { schedule ->
                 onSaveSchedule(schedule)
                 editorOpen = false
@@ -153,15 +153,6 @@ fun SchedulesScreen(
         )
     }
 }
-
-private fun newSchedule(schedules: List<Schedule>): Schedule = Schedule(
-    id = "sched-${schedules.size + 1}",
-    name = "Bedtime",
-    days = setOf(DayOfWeek.MONDAY),
-    startMinute = DEFAULT_START_MINUTE,
-    endMinute = DEFAULT_END_MINUTE,
-    mode = ScheduleMode.PAUSE_ALL,
-)
 
 @Composable
 private fun ScheduleCard(
@@ -261,7 +252,6 @@ private fun ScheduleCard(
 @Composable
 private fun ScheduleEditor(
     initial: Schedule?,
-    schedules: List<Schedule>,
     onSave: (Schedule) -> Unit,
     onDelete: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -277,6 +267,7 @@ private fun ScheduleEditor(
     var studyPickerOpen by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val repository = remember { UsageRepository(context) }
+    val appLabels = remember { repository.launchableAppLabels().toMap() }
 
     val validationError = when {
         name.isBlank() || name.length > MAX_SCHEDULE_NAME_LENGTH -> stringResource(R.string.schedules_editor_error_name)
@@ -313,7 +304,7 @@ private fun ScheduleEditor(
             )
             Spacer(Modifier.height(8.dp))
             DayPicker(days = days) { day ->
-                days = days + day
+                days = if (days.contains(day)) days - day else days + day
             }
             Spacer(Modifier.height(8.dp))
             Row(
@@ -388,7 +379,7 @@ private fun ScheduleEditor(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         ) {
                             Text(
-                                text = packageName,
+                                text = appLabels[packageName] ?: packageName,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.weight(1f),
                             )
@@ -405,11 +396,23 @@ private fun ScheduleEditor(
                     }
                 }
                 Spacer(Modifier.height(8.dp))
+                TextButton(onClick = { studyPickerOpen = true }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(text = stringResource(R.string.schedules_editor_study_add))
+                }
                 if (studyPickerOpen) {
                     AppPickerSheet(
                         apps = repository.launchableAppLabels(),
                         limits = emptyMap(),
-                        onSelect = { packageName, _ -> allowedApps = allowedApps + packageName },
+                        onSelect = { packageName, _ ->
+                            allowedApps = allowedApps + packageName
+                            studyPickerOpen = false
+                        },
                         onDismiss = { studyPickerOpen = false },
                     )
                 }
@@ -445,7 +448,7 @@ private fun ScheduleEditor(
                             allowedApps = allowedApps,
                             enabled = enabled,
                         ) ?: Schedule(
-                            id = "sched-${schedules.size + 1}",
+                            id = "sched-${UUID.randomUUID()}",
                             name = name.trim(),
                             days = days,
                             startMinute = startMinute,

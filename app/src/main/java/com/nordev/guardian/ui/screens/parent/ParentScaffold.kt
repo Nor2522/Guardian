@@ -118,7 +118,9 @@ fun ParentScaffold(
                             }
                         }
                         limitsState.value = updated
-                        GuardianAccessibilityService.instance?.setPolicy(PolicySnapshot(updated))
+                        GuardianAccessibilityService.instance?.setPolicy(
+                            PolicySnapshot(updated, schedulesState.value),
+                        )
                     },
                     usage = usage,
                 )
