@@ -65,6 +65,15 @@ one this service created; when found, the Web tab shows the "Another VPN is
 on" problem instead of a green "on" state. Turning our filter on while another
 VPN is active fails visibly and points at system VPN settings.
 
+## Stopping
+
+Android keeps a `VpnService` bound while the tunnel exists, so `stopService`
+never reaches `onDestroy` and the interface keeps filtering. Turning the switch
+off therefore sends an explicit `ACTION_STOP` to the running service, which
+closes the tunnel descriptor, removes the foreground notification, and stops
+itself. With no tunnel there is no notification: the Web tab's off card is the
+only "off" signal, not a lingering foreground notification.
+
 ## What this cannot do
 
 - Browsers and apps that use DNS over HTTPS, DNS over TLS, or their own
