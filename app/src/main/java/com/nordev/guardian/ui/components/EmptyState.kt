@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.nordev.guardian.ui.theme.GuardianSizes
+import com.nordev.guardian.ui.theme.GuardianSpacing
 
 // Empty states carry title, one sentence, and one action; the action is optional in
 // the signature only so a screen whose ProblemCard already owns the fix action
@@ -33,7 +34,7 @@ fun EmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = GuardianSpacing.sm),
     ) {
         IconBadge(
             icon = icon,
@@ -42,14 +43,14 @@ fun EmptyState(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(GuardianSpacing.lg))
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
         )
         if (body != null) {
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(GuardianSpacing.xs))
             Text(
                 text = body,
                 style = MaterialTheme.typography.bodyMedium,
@@ -58,7 +59,7 @@ fun EmptyState(
             )
         }
         if (actionLabel != null && onAction != null) {
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(GuardianSpacing.xl))
             FilledTonalButton(
                 onClick = onAction,
                 shape = MaterialTheme.shapes.extraLarge,

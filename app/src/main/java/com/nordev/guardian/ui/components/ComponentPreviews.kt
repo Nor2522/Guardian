@@ -1,8 +1,12 @@
 package com.nordev.guardian.ui.components
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.runtime.Composable
@@ -118,6 +122,7 @@ private fun ProtectionRowOnLightPreview() {
             icon = Icons.Outlined.Timelapse,
             title = "App limits and schedules",
             stateText = "On",
+            state = ProtectionState.On,
             modifier = Modifier.padding(16.dp),
         )
     }
@@ -131,6 +136,7 @@ private fun ProtectionRowOffDarkPreview() {
             icon = Icons.Outlined.Shield,
             title = "Uninstall protection",
             stateText = "Off",
+            state = ProtectionState.Off,
             reason = "Guardian can be removed without the PIN.",
             modifier = Modifier.padding(16.dp),
         )
@@ -145,6 +151,7 @@ private fun ProtectionRowAttentionFontScalePreview() {
             icon = Icons.Outlined.Timelapse,
             title = "App limits and schedules",
             stateText = "Needs attention",
+            state = ProtectionState.Attention,
             reason = "Usage access is missing, so limits are not enforced.",
             actionLabel = "Review",
             onAction = {},
@@ -322,5 +329,61 @@ private fun StickyActionBarFontScalePreview() {
             secondaryLabel = "Not now",
             onSecondary = {},
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun GuardianCardLightPreview() {
+    GuardianTheme {
+        GuardianCard(modifier = Modifier.padding(16.dp)) {
+            IconBadge(icon = Icons.Outlined.Shield)
+            Spacer(Modifier.height(12.dp))
+            StatusPill(text = "Protection on", tone = GuardianTone.Success)
+        }
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun GuardianCardDarkPreview() {
+    GuardianTheme {
+        GuardianCard(modifier = Modifier.padding(16.dp)) {
+            IconBadge(icon = Icons.Outlined.Public, size = 56.dp)
+            Spacer(Modifier.height(12.dp))
+            StatusPill(text = "Needs attention", tone = GuardianTone.Attention)
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun GuardianBackgroundLightPreview() {
+    GuardianTheme {
+        GuardianBackground {
+            Column(modifier = Modifier.padding(24.dp)) {
+                IconBadge(icon = Icons.Outlined.Timelapse)
+                Spacer(Modifier.height(16.dp))
+                GuardianPrimaryButton(label = "Get started", onClick = {})
+                Spacer(Modifier.height(16.dp))
+                GuardianProgressBar(progress = 0.62f)
+                Spacer(Modifier.height(16.dp))
+                StepProgress(step = 3)
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, fontScale = 2f)
+@Composable
+private fun GuardianPrimaryButtonFontScalePreview() {
+    GuardianTheme {
+        Column(modifier = Modifier.padding(16.dp)) {
+            GuardianPrimaryButton(label = "I understand what this permission does", onClick = {})
+            Spacer(Modifier.height(12.dp))
+            GuardianPrimaryButton(label = "Saving", onClick = {}, loading = true)
+            Spacer(Modifier.height(12.dp))
+            GuardianPrimaryButton(label = "Turn off protection", onClick = {}, destructive = true)
+        }
     }
 }

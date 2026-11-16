@@ -28,7 +28,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,8 +84,15 @@ fun GuardianBackground(
                     ),
                 )
             },
-        content = content,
-    )
+    ) {
+        // Text outside a card has no Surface to inherit from; without this it
+        // falls back to black and disappears on the dark scheme.
+        CompositionLocalProvider(
+            LocalContentColor provides MaterialTheme.colorScheme.onBackground,
+        ) {
+            content()
+        }
+    }
 }
 
 // The standard card: a 16 dp tonal surface with a hairline that makes the edge
@@ -129,14 +138,24 @@ fun IconBadge(
             .drawBehind {
                 val radius = this.size.minDimension * 0.34f
                 if (halo) {
+                    // Soft falloff instead of a flat disc, so the glow never
+                    // reads as a hard-edged smudge behind the tile.
                     drawCircle(
-                        color = containerColor.copy(alpha = 0.30f),
-                        radius = this.size.minDimension * 0.70f,
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                containerColor.copy(alpha = 0.24f),
+                                containerColor.copy(alpha = 0.08f),
+                                Color.Transparent,
+                            ),
+                            center = center,
+                            radius = this.size.minDimension * 0.72f,
+                        ),
+                        radius = this.size.minDimension * 0.72f,
                     )
                 }
                 drawRoundRect(
                     brush = Brush.linearGradient(
-                        listOf(containerColor, containerColor.copy(alpha = 0.55f)),
+                        listOf(containerColor, lerp(containerColor, contentColor, 0.07f)),
                     ),
                     cornerRadius = CornerRadius(radius, radius),
                 )

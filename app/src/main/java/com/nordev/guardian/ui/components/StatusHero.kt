@@ -20,7 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -72,18 +73,15 @@ fun StatusHero(
             .clip(shape)
             .background(gradient)
             .drawBehind {
-                val ink = onContainer.copy(alpha = 0.07f)
-                drawCircle(
-                    color = ink,
-                    radius = size.width * 0.52f,
-                    center = Offset(size.width * 0.96f, -size.height * 0.10f),
-                    style = Stroke(width = 24.dp.toPx()),
-                )
-                drawCircle(
-                    color = ink.copy(alpha = 0.45f),
-                    radius = size.width * 0.66f,
-                    center = Offset(size.width * 0.96f, -size.height * 0.10f),
-                    style = Stroke(width = 1.dp.toPx()),
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            onContainer.copy(alpha = 0.10f),
+                            Color.Transparent,
+                        ),
+                        center = Offset(size.width * 1.05f, -size.height * 0.08f),
+                        radius = size.width * 0.95f,
+                    ),
                 )
             }
             .padding(horizontal = 20.dp, vertical = 24.dp),
@@ -111,7 +109,7 @@ fun StatusHero(
             Text(
                 text = body,
                 style = MaterialTheme.typography.bodyMedium,
-                color = onContainer.copy(alpha = 0.78f),
+                color = onContainer,
                 textAlign = TextAlign.Center,
             )
         }

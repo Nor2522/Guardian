@@ -30,6 +30,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.nordev.guardian.R
 import com.nordev.guardian.data.usage.AppUsage
+import com.nordev.guardian.ui.theme.GuardianSizes
+import com.nordev.guardian.ui.theme.GuardianSpacing
 import com.nordev.guardian.ui.theme.LocalGuardianGradients
 
 @Composable
@@ -44,17 +46,17 @@ fun AppUsageRow(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = GuardianSpacing.xs)
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .border(1.dp, border, shape)
-            .padding(horizontal = 12.dp, vertical = 12.dp)
+            .border(GuardianSpacing.hairline, border, shape)
+            .padding(GuardianSpacing.md)
             .semantics(mergeDescendants = true) {},
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(44.dp)
+                .size(GuardianSizes.iconBadge)
                 .clip(RoundedCornerShape(14.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
@@ -75,7 +77,7 @@ fun AppUsageRow(
                 )
             }
         }
-        Spacer(Modifier.width(14.dp))
+        Spacer(Modifier.width(GuardianSpacing.md))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = app.label,
@@ -83,7 +85,7 @@ fun AppUsageRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(GuardianSpacing.xxs))
             Text(
                 text = duration,
                 style = MaterialTheme.typography.bodyLarge,

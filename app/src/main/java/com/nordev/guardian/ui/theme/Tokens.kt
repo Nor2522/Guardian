@@ -112,7 +112,7 @@ private fun guardianGradients(
             ),
         ),
         accentLine = Brush.horizontalGradient(
-            listOf(colors.primary, colors.tertiary),
+            listOf(colors.primary, colors.primaryContainer),
         ),
         ambientTop = colors.primary.copy(alpha = if (dark) 0.16f else 0.10f),
         ambientBottom = colors.tertiary.copy(alpha = if (dark) 0.10f else 0.05f),

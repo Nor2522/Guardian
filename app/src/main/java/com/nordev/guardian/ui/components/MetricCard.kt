@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.nordev.guardian.ui.theme.GuardianSpacing
@@ -39,10 +41,12 @@ fun MetricCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .drawBehind {
-                    drawCircle(
-                        color = gradients.ambientTop.copy(alpha = 0.55f),
-                        radius = size.width * 0.34f,
-                        center = Offset(size.width * 1.02f, -size.height * 0.10f),
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(gradients.ambientTop, Color.Transparent),
+                            center = Offset(size.width * 1.02f, -size.height * 0.08f),
+                            radius = size.width * 0.85f,
+                        ),
                     )
                 }
                 .padding(20.dp),

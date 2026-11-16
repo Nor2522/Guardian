@@ -7,14 +7,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.nordev.guardian.ui.theme.GuardianSizes
+import com.nordev.guardian.ui.theme.GuardianSpacing
 
 // One primary action pinned above the system inset, with an optional text action.
 // Callers scroll their own content above it.
@@ -32,33 +32,21 @@ fun StickyActionBar(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            .padding(start = GuardianSpacing.gutter, end = GuardianSpacing.gutter, bottom = GuardianSpacing.gutter),
     ) {
-        Button(
+        GuardianPrimaryButton(
+            label = primaryLabel,
             onClick = onPrimary,
             enabled = primaryEnabled,
-            shape = MaterialTheme.shapes.extraLarge,
-            colors = if (primaryDestructive) {
-                ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError,
-                )
-            } else {
-                ButtonDefaults.buttonColors()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 48.dp),
-        ) {
-            Text(text = primaryLabel, style = MaterialTheme.typography.labelLarge)
-        }
+            destructive = primaryDestructive,
+        )
         if (secondaryLabel != null && onSecondary != null) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(GuardianSpacing.sm))
             TextButton(
                 onClick = onSecondary,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp),
+                    .heightIn(min = GuardianSizes.minTouch),
             ) {
                 Text(text = secondaryLabel, style = MaterialTheme.typography.labelLarge)
             }

@@ -154,12 +154,12 @@ private fun ScheduleCard(
     onToggle: () -> Unit,
 ) {
     val chipColor = if (schedule.mode == ScheduleMode.PAUSE_ALL) {
-        MaterialTheme.colorScheme.tertiaryContainer
+        MaterialTheme.colorScheme.primaryContainer
     } else {
         MaterialTheme.colorScheme.secondaryContainer
     }
     val chipContentColor = if (schedule.mode == ScheduleMode.PAUSE_ALL) {
-        MaterialTheme.colorScheme.onTertiaryContainer
+        MaterialTheme.colorScheme.onPrimaryContainer
     } else {
         MaterialTheme.colorScheme.onSecondaryContainer
     }
