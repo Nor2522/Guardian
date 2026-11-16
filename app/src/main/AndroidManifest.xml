@@ -10,6 +10,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- The parent removal path hands the last step to Android's uninstall
+         screen. Without this declaration the installer closes itself. -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
     <!-- Usage events only expose package names. These queries let Guardian read
          labels and icons for launchable apps and find the home app to exclude. -->

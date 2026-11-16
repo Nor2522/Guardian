@@ -67,8 +67,14 @@ class GuardianAccessibilityService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        if (instance === this) instance = null
         scope.cancel()
         super.onDestroy()
+    }
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        instance = this
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -110,6 +116,16 @@ class GuardianAccessibilityService : AccessibilityService() {
     companion object {
         private const val MILLIS_PER_DAY = 86_400_000L
         private const val TAG = "Guardian"
+
+        // The platform owns the service lifecycle. The parent removal screen
+        // only needs the live instance so the service can disable itself; no
+        // other component holds a reference.
+        @Volatile
+        private var instance: GuardianAccessibilityService? = null
+
+        fun requestStop() {
+            instance?.disableSelf()
+        }
 
         // Shared across instances: the platform can create more than one service
         // instance, and the last one is not always the one receiving events.

@@ -36,11 +36,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.nordev.guardian.R
+import com.nordev.guardian.data.prefs.ParentPinRepository
 import com.nordev.guardian.data.prefs.PolicyRepository
 import com.nordev.guardian.data.usage.UsageSnapshot
 import com.nordev.guardian.data.web.BlocklistRepository
 import com.nordev.guardian.domain.block.PolicySnapshot
 import com.nordev.guardian.domain.web.WebFilterPolicy
+import com.nordev.guardian.service.admin.GuardianProtection
 import com.nordev.guardian.ui.nav.Routes
 import com.nordev.guardian.ui.nav.ThemeMode
 import kotlinx.coroutines.launch
@@ -70,12 +72,15 @@ fun ParentScaffold(
     onOpenVpnSettings: () -> Unit,
     onOpenNetworkSettings: () -> Unit,
     policyRepository: PolicyRepository,
+    pinRepository: ParentPinRepository,
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    val showBottomBar = currentRoute != Routes.PARENT_SETTINGS && currentRoute != Routes.PARENT_WEB_ADD
+    val showBottomBar = currentRoute != Routes.PARENT_SETTINGS &&
+        currentRoute != Routes.PARENT_WEB_ADD &&
+        currentRoute != Routes.PARENT_SETTINGS_REMOVE
     val snackbarHostState = remember { SnackbarHostState() }
     val warningText = stringResource(R.string.parent_session_warning)
     val scope = rememberCoroutineScope()
@@ -196,6 +201,17 @@ fun ParentScaffold(
                     onBack = { navController.popBackStack() },
                     themeMode = themeMode,
                     onThemeChange = onThemeChange,
+                    onOpenRemoval = { navController.navigate(Routes.PARENT_SETTINGS_REMOVE) },
+                )
+            }
+            composable(Routes.PARENT_SETTINGS_REMOVE) {
+                RemoveGuardianScreen(
+                    pinRepository = pinRepository,
+                    onBack = { navController.popBackStack() },
+                    onTurnOffProtection = {
+                        policyRepository.saveWebFilter(webFilter.copy(enabled = false))
+                        GuardianProtection.turnOff(context)
+                    },
                 )
             }
         }

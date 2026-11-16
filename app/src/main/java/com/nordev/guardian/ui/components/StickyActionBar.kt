@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -23,6 +24,7 @@ fun StickyActionBar(
     onPrimary: () -> Unit,
     modifier: Modifier = Modifier,
     primaryEnabled: Boolean = true,
+    primaryDestructive: Boolean = false,
     secondaryLabel: String? = null,
     onSecondary: (() -> Unit)? = null,
 ) {
@@ -36,6 +38,14 @@ fun StickyActionBar(
             onClick = onPrimary,
             enabled = primaryEnabled,
             shape = MaterialTheme.shapes.extraLarge,
+            colors = if (primaryDestructive) {
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                )
+            } else {
+                ButtonDefaults.buttonColors()
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 48.dp),

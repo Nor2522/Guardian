@@ -76,6 +76,7 @@ object Routes {
     const val PARENT_WEB = "parent/web"
     const val PARENT_WEB_ADD = "parent/web/add"
     const val PARENT_SETTINGS = "parent/settings"
+    const val PARENT_SETTINGS_REMOVE = "parent/settings/remove"
 
     fun disclosureRoute(type: DisclosureType): String = "onboarding/disclosure/${type.name}"
 
@@ -313,6 +314,7 @@ fun GuardianNavHost(
                         runCatching { context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS)) }
                     },
                     policyRepository = policyRepository,
+                    pinRepository = repository,
                 )
             }
         }

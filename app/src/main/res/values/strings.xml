@@ -58,7 +58,7 @@
     <string name="onboarding_pin_mismatch">The PINs do not match.</string>
     <string name="onboarding_pin_enter_six">Enter all six digits.</string>
     <string name="onboarding_pin_no_reset">There is no PIN reset in this version. Keep this PIN somewhere safe.</string>
-    <string name="onboarding_pin_reinstall">Uninstalling Guardian or clearing app data deletes the PIN and all rules. Uninstall protection comes in a later step.</string>
+    <string name="onboarding_pin_reinstall">Uninstalling Guardian or clearing app data deletes the PIN and all rules.</string>
     <string name="onboarding_pin_saving">Saving…</string>
     <string name="onboarding_pin_save_error">Could not save the PIN. Try again.</string>
     <string name="onboarding_continue">Continue</string>
@@ -271,8 +271,22 @@
     <string name="settings_privacy">Privacy policy</string>
     <string name="settings_data">Data on this phone</string>
     <string name="settings_data_storage">Your PIN is saved as a salted hash, not as digits. It stays after a restart.</string>
-    <string name="settings_data_reinstall">Uninstalling Guardian or clearing app data deletes the PIN and every rule. There is no cloud backup and no PIN reset in this version. Uninstall protection comes in a later step.</string>
+    <string name="settings_data_reinstall">Uninstalling Guardian or clearing app data deletes the PIN and every rule. There is no cloud backup and no PIN reset in this version.</string>
     <string name="settings_section_about">About</string>
     <string name="settings_version">Version</string>
     <string name="settings_version_value">0.1.0</string>
+    <string name="settings_remove_title">Remove Guardian</string>
+    <string name="settings_remove_body">Turn off protection and uninstall. Requires your PIN.</string>
+
+    <!-- Removal -->
+    <string name="remove_title">Remove Guardian</string>
+    <string name="remove_body">This turns off app limits, schedules, the website filter, and uninstall protection. The PIN, rules, and usage history on this phone are deleted.</string>
+    <string name="remove_pin_label">Parent PIN</string>
+    <string name="remove_pin_helper">Enter your PIN to confirm. An unlocked session is not enough.</string>
+    <string name="remove_action">Turn off and remove</string>
+    <string name="remove_keep">Keep Guardian</string>
+    <string name="remove_no_pin">No parent PIN is saved. Create one before removing Guardian.</string>
+    <string name="remove_failed">The PIN could not be checked. Try again.</string>
+    <string name="remove_hint">Android asks one more time before it uninstalls the app.</string>
+    <string name="remove_protection_off">Protection is off. If you keep Guardian, turn the checks back on in Permissions.</string>
 </resources>

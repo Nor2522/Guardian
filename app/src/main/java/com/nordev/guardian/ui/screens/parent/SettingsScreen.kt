@@ -45,6 +45,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     themeMode: ThemeMode,
     onThemeChange: (ThemeMode) -> Unit,
+    onOpenRemoval: () -> Unit,
 ) {
     var showPrivacySummary by rememberSaveable { mutableStateOf(false) }
     Scaffold(topBar = { GuardianTopBar(title = stringResource(R.string.settings_title), onBack = onBack) }) { innerPadding ->
@@ -118,6 +119,33 @@ fun SettingsScreen(
                         text = stringResource(R.string.settings_data_reinstall),
                         style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
                         color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Spacer(Modifier.height(24.dp))
+            Card(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = androidx.compose.material3.MaterialTheme.colorScheme.errorContainer,
+                ),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onOpenRemoval)
+                        .heightIn(min = 56.dp)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_remove_title),
+                        style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.settings_remove_body),
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onErrorContainer,
                     )
                 }
             }
