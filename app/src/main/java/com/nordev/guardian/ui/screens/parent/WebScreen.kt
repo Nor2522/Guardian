@@ -79,6 +79,7 @@ fun WebScreen(
     adultListCount: Int,
     onOpenSettings: () -> Unit,
     onSetEnabled: (Boolean) -> Unit,
+    onRequestTurnOff: () -> Unit,
     onAddSite: () -> Unit,
     onRemoveSite: (String) -> Unit,
     onTurnOnFilter: () -> Unit,
@@ -89,7 +90,6 @@ fun WebScreen(
     val reader = remember(context) { WebFilterStatusReader(context) }
     val lifecycleOwner = LocalLifecycleOwner.current
     var status by remember { mutableStateOf(WebFilterStatus.Off) }
-    var confirmTurnOff by rememberSaveable { mutableStateOf(false) }
     var pendingRemoval by rememberSaveable { mutableStateOf<String?>(null) }
     var showHowItWorks by rememberSaveable { mutableStateOf(false) }
 
@@ -138,7 +138,7 @@ fun WebScreen(
                     if (enabled) {
                         onSetEnabled(true)
                     } else {
-                        confirmTurnOff = true
+                        onRequestTurnOff()
                     }
                 },
             )
@@ -212,16 +212,6 @@ fun WebScreen(
             )
             Spacer(Modifier.height(24.dp))
         }
-    }
-
-    if (confirmTurnOff) {
-        TurnOffDialog(
-            onDismiss = { confirmTurnOff = false },
-            onConfirm = {
-                confirmTurnOff = false
-                onSetEnabled(false)
-            },
-        )
     }
 
     pendingRemoval?.let { domain ->
@@ -384,38 +374,6 @@ private fun SiteRow(
             )
         }
     }
-}
-
-@Composable
-private fun TurnOffDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    val cancelFocus = remember { FocusRequester() }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = stringResource(R.string.web_turn_off_title)) },
-        text = { Text(text = stringResource(R.string.web_turn_off_body)) },
-        confirmButton = {
-            TextButton(
-                onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error,
-                ),
-            ) {
-                Text(text = stringResource(R.string.web_turn_off_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                modifier = Modifier.focusRequester(cancelFocus),
-            ) {
-                Text(text = stringResource(R.string.web_cancel))
-            }
-        },
-    )
-    LaunchedEffect(cancelFocus) { cancelFocus.requestFocus() }
 }
 
 @Composable

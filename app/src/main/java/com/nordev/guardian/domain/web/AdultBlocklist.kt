@@ -1,5 +1,7 @@
 package com.nordev.guardian.domain.web
 
+import java.util.Locale
+
 // The shipped adult list. Read only for the parent; the asset header carries
 // the version and license so the Web tab can show them without a second file.
 data class AdultBlocklist(
@@ -15,7 +17,7 @@ data class AdultBlocklist(
         fun parse(text: String): AdultBlocklist {
             var version = DEFAULT_VERSION
             var license = ""
-            val domains = linkedSetOf<String>()
+            val domains = HashSet<String>()
             text.lineSequence().forEach { raw ->
                 val line = raw.trim()
                 if (line.isEmpty()) return@forEach
@@ -30,10 +32,18 @@ data class AdultBlocklist(
                     }
                     return@forEach
                 }
-                val domain = DomainName.normalize(line) ?: return@forEach
+                val domain = DomainName.normalize(line)
+                    ?: line.lowercase(Locale.ROOT).removePrefix("www.")
+                        .takeIf { it in ADULT_TLDS }
+                    ?: return@forEach
                 domains += domain
             }
             return AdultBlocklist(version = version, license = license, domains = domains)
         }
+
+        // A whole adult TLD is stronger than a list of sites under it. Custom
+        // entries still have to be full domains, so only the shipped asset can
+        // add these.
+        private val ADULT_TLDS = setOf("sex", "xxx")
     }
 }

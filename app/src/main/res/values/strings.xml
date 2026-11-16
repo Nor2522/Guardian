@@ -49,6 +49,14 @@
     <string name="parent_session_warning">Guardian will lock in 30 seconds.</string>
     <string name="pin_field_cd">PIN</string>
 
+    <!-- System settings guard -->
+    <string name="guard_web_title">Website filter is protected</string>
+    <string name="guard_web_body">Enter your parent PIN to change the phone\'s VPN settings. Turning the VPN off stops the website filter.</string>
+    <string name="guard_pin_label">Parent PIN</string>
+    <string name="guard_unlock">Unlock settings</string>
+    <string name="guard_go_home">Go home</string>
+    <string name="guard_grace_note">After a correct PIN, settings stay unlocked for 60 seconds.</string>
+
     <!-- Onboarding shell -->
     <string name="onboarding_progress">Step %1$d of 5</string>
     <string name="onboarding_cancel">Cancel</string>
@@ -243,7 +251,7 @@
     </plurals>
     <string name="empty_web">No custom sites. Guardian blocks its adult site list.</string>
     <string name="web_help_title">What the filter cannot do</string>
-    <string name="web_help_body">Some apps and browsers use their own DNS or a direct connection and can bypass the filter. Guardian does not inspect HTTPS traffic and cannot see page content. It does not promise perfect blocking.</string>
+    <string name="web_help_body">Some apps and browsers use their own DNS or a direct connection and can bypass the filter. Android\'s Quick Settings VPN switch cannot be PIN-locked, and the VPN settings guard needs Accessibility. Guardian does not inspect HTTPS traffic or keep browsing history, and cannot promise perfect blocking.</string>
     <string name="web_status_on_title">Website filter is on</string>
     <string name="web_status_on_body">Adult sites and your blocked sites are filtered on this phone.</string>
     <string name="web_status_needs_consent_title">Website filter needs permission</string>
@@ -258,10 +266,12 @@
     <string name="web_action_open_vpn_settings">Open VPN settings</string>
     <string name="web_action_open_network_settings">Open network settings</string>
     <string name="web_filter_switch">Filter websites</string>
-    <string name="web_filter_switch_supporting">Uses a local DNS check. Does not inspect page content.</string>
-    <string name="web_turn_off_title">Turn off the website filter?</string>
+    <string name="web_filter_switch_supporting">Uses a local DNS check. Turning it off asks for your parent PIN.</string>
     <string name="web_turn_off_body">Adult sites and your blocked sites will load until you turn it back on. App limits and schedules keep working.</string>
     <string name="web_turn_off_confirm">Turn off</string>
+    <string name="web_turn_off_screen_title">Turn off filter</string>
+    <string name="web_turn_off_keep">Keep it on</string>
+    <string name="web_turn_off_settings_note">While the filter is on, the phone\'s VPN settings also ask for this PIN.</string>
     <string name="web_remove_site_cd">Remove %1$s</string>
     <string name="web_remove_site_title">Remove %1$s?</string>
     <string name="web_remove_site_body">The site will load again unless it is on the adult list.</string>

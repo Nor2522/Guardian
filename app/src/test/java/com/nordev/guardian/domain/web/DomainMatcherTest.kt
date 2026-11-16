@@ -59,4 +59,14 @@ class AdultBlocklistTest {
         assertEquals(AdultBlocklist.DEFAULT_VERSION, list.version)
         assertEquals(1, list.domains.size)
     }
+
+    @Test
+    fun acceptsWholeAdultTldsOnlyFromTheShippedList() {
+        // The source contains www.sex and www.xxx, so the www form must reach
+        // the TLD fallback after normalization strips the prefix.
+        val list = AdultBlocklist.parse("xxx\nwww.sex\nwww.xxx\nexample.com")
+        assertTrue(list.matcher.blocks("new.xxx"))
+        assertTrue(list.matcher.blocks("new.sex"))
+        assertEquals(setOf("xxx", "sex", "example.com"), list.domains)
+    }
 }

@@ -14,7 +14,10 @@ import com.nordev.guardian.domain.block.AccessDecision
 import com.nordev.guardian.domain.block.AlwaysAllowed
 import com.nordev.guardian.domain.block.PolicySnapshot
 import com.nordev.guardian.ui.block.BlockActivity
+import com.nordev.guardian.ui.guard.GuardActivity
 import com.nordev.guardian.ui.nav.BlockState
+import com.nordev.guardian.ui.nav.GuardKind
+import com.nordev.guardian.ui.nav.GuardState
 import java.time.LocalDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +34,9 @@ class GuardianAccessibilityService : AccessibilityService() {
 
     private val policy: PolicySnapshot
         get() = sharedPolicy
+
+    @Volatile
+    private var webFilterEnabled = true
 
     // Home, keyboards, the dialer, the clock, and Guardian itself never get a
     // pause screen. The static part lives in the domain; the rest depends on
@@ -64,6 +70,12 @@ class GuardianAccessibilityService : AccessibilityService() {
         scope.launch {
             repository.snapshot.collect { sharedPolicy = it }
         }
+        scope.launch {
+            repository.webFilter.collect { filter ->
+                webFilterEnabled = filter.enabled
+                if (!filter.enabled) GuardState.clear()
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -82,6 +94,20 @@ class GuardianAccessibilityService : AccessibilityService() {
         val packageName = event.packageName?.toString() ?: return
         if (packageName in alwaysAllowed) {
             if (BuildConfig.DEBUG) Log.d(TAG, "skip $packageName")
+            return
+        }
+        val className = event.className?.toString()
+        val guardKind = guardKindFor(packageName, className)
+        if (guardKind != null && webFilterEnabled && !GuardState.inGrace(guardKind)) {
+            if (BuildConfig.DEBUG) Log.d(TAG, "guard $packageName/$className")
+            GuardState.guard(guardKind)
+            runCatching {
+                startActivity(
+                    Intent(this, GuardActivity::class.java).addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP,
+                    ),
+                )
+            }
             return
         }
         val decision = evaluate(packageName)
@@ -113,9 +139,23 @@ class GuardianAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() = Unit
 
+    // Package and class only. Measured on the SM-A155F: the system VPN list is
+    // com.android.settings.Settings$VpnSettingsActivity. The suffix also catches
+    // AOSP's VpnSettings fragment and OEM wrappers. Private DNS is not a
+    // standalone screen on this phone, and Quick Settings cannot be guarded.
+    private fun guardKindFor(packageName: String, className: String?): GuardKind? {
+        if (packageName != SETTINGS_PACKAGE || className == null) return null
+        return when {
+            className.endsWith("VpnSettingsActivity") -> GuardKind.WebFilterSettings
+            className.endsWith(".VpnSettings") -> GuardKind.WebFilterSettings
+            else -> null
+        }
+    }
+
     companion object {
         private const val MILLIS_PER_DAY = 86_400_000L
         private const val TAG = "Guardian"
+        private const val SETTINGS_PACKAGE = "com.android.settings"
 
         // The platform owns the service lifecycle. The parent removal screen
         // only needs the live instance so the service can disable itself; no

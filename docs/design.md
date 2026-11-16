@@ -572,16 +572,17 @@ Top app bar "Web" with settings.
 Layout:
 
 1. Status card. Healthy state uses `successContainer` with a shield icon, "Website filter is on", and body "Adult sites and your blocked sites are filtered on this phone." If the parent turned the filter off, use `surfaceContainerLow` with an info icon, "Website filter is off", and body "Adult sites and your blocked sites can load. App limits and schedules keep working." If a permission was revoked or the VPN stopped, use `warningContainer` and the problem copy. If another VPN is active, show that problem instead of a false "on" state.
-2. Filter switch row. Label "Filter websites", supporting text "Uses a local DNS check. Does not inspect page content." The switch is `primary`.
+2. Filter switch row. Label "Filter websites", supporting text "Uses a local DNS check. Turning it off asks for your parent PIN." The switch is `primary`. Turning it off opens the PIN confirmation screen; the switch stays on until the PIN is accepted.
 3. Custom sites section. Title "Blocked sites" and a count. Rows show the domain in `bodyLarge`, with a remove icon button that has the content description "Remove example.com". Remove asks for confirmation. Empty state "No custom sites. Guardian blocks its adult site list."
 4. Add site. A full width outlined button "Add a site" opens a small screen with a text field, helper "Enter a domain like example.com. Subdomains are included. Do not include https:// or a path.", and Save. Inline errors for an invalid or duplicate domain. Normalize to lowercase ASCII and strip a leading `www.` only if the stored list expects it. Show the normalized value before saving.
-5. Adult site list info. "Adult site list, version 2026.11, 12,345 domains." The version and count come from the asset metadata. A "How filtering works" text button opens a sheet.
-6. Limits explainer. Keep the key caveat visible, not behind an expander. A `surfaceContainerLow` card with the title "What the filter cannot do" and body "Some apps and browsers use their own DNS or a direct connection and can bypass the filter. Guardian does not inspect HTTPS traffic and cannot see page content. It does not promise perfect blocking."
+5. Adult site list info. "Adult site list, version 2026.11.15, 64,307 domains." The version and count come from the asset metadata. A "How filtering works" text button opens a sheet.
+6. Limits explainer. Keep the key caveat visible, not behind an expander. A `surfaceContainerLow` card with the title "What the filter cannot do" and body "Some apps and browsers use their own DNS or a direct connection and can bypass the filter. Android's Quick Settings VPN switch cannot be PIN-locked, and the VPN settings guard needs Accessibility. Guardian does not inspect HTTPS traffic or keep browsing history, and cannot promise perfect blocking."
 7. Problem states. VPN off, another VPN active, or no network. The status card is replaced by the matching `ProblemCard` with one action.
 
 Turning the filter off:
 
-- Confirmation dialog. Title "Turn off the website filter?" Body "Adult sites and your blocked sites will load until you turn it back on. App limits and schedules keep working." Confirm action "Turn off" in error color, cancel focused by default.
+- PIN confirmation screen. Top app bar "Turn off filter". Body "Adult sites and your blocked sites will load until you turn it back on. App limits and schedules keep working." A six-digit parent PIN field, helper "Enter your PIN to confirm. An unlocked session is not enough.", primary "Turn off" in error color, secondary "Keep it on". The switch stays on until the PIN succeeds. A wrong PIN uses the same stored lockout as the gate.
+- System settings guard. While the filter is on and Accessibility is bound, opening the system VPN settings screen (`com.android.settings.Settings$VpnSettingsActivity` on the SM-A155F; AOSP's `VpnSettings` fragment is also matched) shows a full-screen guard with the same PIN. The guard matches package and class only, never reads screen text. A correct PIN grants 60 seconds so the parent can change or disconnect the VPN; leaving and returning after that asks again. Back is ignored, Home works, and returning to the screen brings the guard back. The guard does not cover Android Quick Settings, which can disconnect the VPN without a PIN. The help card says so.
 - After turning it off, the status screen shows the filter as Off and the notification says the filter is off. Do not leave a green "Website filter is on" state.
 
 Domain rules:
@@ -589,7 +590,7 @@ Domain rules:
 - Accept a bare domain or a full URL and normalize it. Strip a leading `www.` before saving because the stored domain already covers its subdomains. Reject spaces, a missing dot, a path-only value, and values longer than 253 characters.
 - A stored domain blocks that domain and its subdomains. Enter `example.com` to block all of it, or `ads.example.com` to block only that subdomain. Say this in the helper text.
 - Store punycode for international domains. Display the Unicode form when available.
-- The shipped adult list is read only. The parent cannot edit or delete it. A custom domain that duplicates the shipped list is allowed but shown as "Already on the adult list." Do not create a duplicate row.
+- The shipped adult list is read only. The parent cannot edit or delete it. A custom domain that duplicates the shipped list is allowed but shown as "Already on the adult list." Do not create a duplicate row. The maintained list is the default protection; the parent does not need to add a domain for it to work.
 
 ### 9. Settings
 

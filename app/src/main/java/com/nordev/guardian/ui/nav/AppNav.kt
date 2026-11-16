@@ -77,6 +77,7 @@ object Routes {
     const val PARENT_SCHEDULES = "parent/schedules"
     const val PARENT_WEB = "parent/web"
     const val PARENT_WEB_ADD = "parent/web/add"
+    const val PARENT_WEB_TURN_OFF = "parent/web/turn-off"
     const val PARENT_SETTINGS = "parent/settings"
     const val PARENT_SETTINGS_REMOVE = "parent/settings/remove"
 

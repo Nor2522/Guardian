@@ -90,6 +90,7 @@ fun ParentScaffold(
     val currentRoute = backStackEntry?.destination?.route
     val showBottomBar = currentRoute != Routes.PARENT_SETTINGS &&
         currentRoute != Routes.PARENT_WEB_ADD &&
+        currentRoute != Routes.PARENT_WEB_TURN_OFF &&
         currentRoute != Routes.PARENT_SETTINGS_REMOVE
     val snackbarHostState = remember { SnackbarHostState() }
     val warningText = stringResource(R.string.parent_session_warning)
@@ -185,6 +186,9 @@ fun ParentScaffold(
                             if (enabled) onTurnOnFilter()
                         }
                     },
+                    onRequestTurnOff = {
+                        navController.navigate(Routes.PARENT_WEB_TURN_OFF)
+                    },
                     onAddSite = { navController.navigate(Routes.PARENT_WEB_ADD) },
                     onRemoveSite = { domain ->
                         scope.launch {
@@ -210,6 +214,15 @@ fun ParentScaffold(
                             )
                         }
                         navController.popBackStack()
+                    },
+                )
+            }
+            composable(Routes.PARENT_WEB_TURN_OFF) {
+                TurnOffWebFilterScreen(
+                    pinRepository = pinRepository,
+                    onBack = { navController.popBackStack() },
+                    onTurnOff = {
+                        policyRepository.saveWebFilter(webFilter.copy(enabled = false))
                     },
                 )
             }

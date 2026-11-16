@@ -74,6 +74,17 @@ closes the tunnel descriptor, removes the foreground notification, and stops
 itself. With no tunnel there is no notification: the Web tab's off card is the
 only "off" signal, not a lingering foreground notification.
 
+## System settings guard
+
+While the filter is on, the accessibility service also watches for the system
+VPN settings screen. It matches package and class only:
+`com.android.settings.Settings$VpnSettingsActivity` on the SM-A155F, plus the
+AOSP `VpnSettings` fragment suffix. The guard host asks for the parent PIN; a
+correct PIN grants 60 seconds, then the guard returns. Back is ignored and Home
+works. This is a best-effort layer, not a system lock: Quick Settings can still
+disconnect the VPN, and the guard needs Accessibility. The Web help card states
+both limits.
+
 ## What this cannot do
 
 - Browsers and apps that use DNS over HTTPS, DNS over TLS, or their own
@@ -81,6 +92,10 @@ only "off" signal, not a lingering foreground notification.
   inspect HTTPS and cannot see page content.
 - Hardcoded IP addresses never ask DNS and are not blocked.
 - A custom app with its own network stack can do the same.
+- Android Quick Settings can disconnect the VPN without passing the settings
+  guard. Guardian cannot password-lock that system control.
+- With Accessibility off, the VPN settings guard is not active. The OS still
+  shows the weaker state on the status screen.
 - Play and the app copy must say "does not promise perfect blocking".
 
 ## Failure states
