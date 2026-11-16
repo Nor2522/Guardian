@@ -1,5 +1,6 @@
 package com.nordev.guardian.ui.screens.parent
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -11,7 +12,9 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Today
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -26,9 +29,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -46,6 +51,8 @@ import com.nordev.guardian.domain.web.WebFilterPolicy
 import com.nordev.guardian.service.admin.GuardianProtection
 import com.nordev.guardian.ui.nav.Routes
 import com.nordev.guardian.ui.nav.ThemeMode
+import com.nordev.guardian.ui.theme.GuardianSpacing
+import com.nordev.guardian.ui.theme.LocalGuardianGradients
 import kotlinx.coroutines.launch
 
 private class ParentTab(
@@ -110,6 +117,7 @@ fun ParentScaffold(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
@@ -230,33 +238,44 @@ fun ParentScaffold(
     }
 }
 
+// The bar floats over the ambient wash with a hairline instead of a tonal
+// elevator, so the parent tabs keep the same depth as the child screens.
 @Composable
 private fun GuardianBottomBar(
     navController: NavHostController,
     currentRoute: String?,
 ) {
-    NavigationBar {
-        parentTabs.forEach { tab ->
-            val selected = currentRoute == tab.route
-            NavigationBarItem(
-                selected = selected,
-                onClick = {
-                    navController.navigate(tab.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+    Column {
+        HorizontalDivider(
+            thickness = GuardianSpacing.hairline,
+            color = LocalGuardianGradients.current.cardBorder,
+        )
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            tonalElevation = 0.dp,
+        ) {
+            parentTabs.forEach { tab ->
+                val selected = currentRoute == tab.route
+                NavigationBarItem(
+                    selected = selected,
+                    onClick = {
+                        navController.navigate(tab.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                icon = {
-                    Icon(
-                        imageVector = if (selected) tab.filled else tab.outlined,
-                        contentDescription = null,
-                    )
-                },
-                label = { Text(text = stringResource(tab.labelRes)) },
-            )
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = if (selected) tab.filled else tab.outlined,
+                            contentDescription = null,
+                        )
+                    },
+                    label = { Text(text = stringResource(tab.labelRes)) },
+                )
+            }
         }
     }
 }
