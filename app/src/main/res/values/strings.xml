@@ -7,6 +7,26 @@
     <string name="status_finish_setup">Finish setup</string>
     <string name="hero_setup_title">Finish setting up Guardian</string>
     <string name="hero_setup_body">3 checks are left before protection is complete.</string>
+    <string name="hero_healthy_title">Guardian is on</string>
+    <string name="hero_healthy_body">Protection is running for the checks you turned on.</string>
+    <string name="hero_attention_title">Protection needs attention</string>
+    <string name="hero_off_title">Guardian is off</string>
+    <string name="hero_off_body">No protection checks are on.</string>
+    <plurals name="hero_attention_many">
+        <item quantity="one">%1$d check needs attention. Tap Review to fix it.</item>
+        <item quantity="other">%1$d checks need attention. Tap Review to fix them.</item>
+    </plurals>
+    <string name="status_checks_title">Protection checks</string>
+    <string name="check_state_attention">Needs attention</string>
+    <string name="check_review">Review</string>
+    <string name="check_limits_issue_usage">Usage access is off. Guardian cannot count app time.</string>
+    <string name="check_limits_issue_accessibility">Accessibility is off. Guardian cannot block apps.</string>
+    <string name="check_limits_issue_both">Usage access and Accessibility are off. Limits cannot count or block.</string>
+    <string name="check_web_issue_consent">Allow VPN access so the filter can run.</string>
+    <string name="check_web_issue_stopped">The filter stopped. Adult sites can load until it is back on.</string>
+    <string name="check_web_issue_another_vpn">Another VPN is on. Guardian\'s filter cannot run.</string>
+    <string name="check_web_issue_no_network">No network. Connect to Wi-Fi or mobile data so the filter can run.</string>
+    <string name="check_uninstall_issue">Uninstall protection is off. Android can remove Guardian without your PIN.</string>
     <string name="usage_today_none">None today</string>
     <string name="usage_unavailable">Not available</string>
     <string name="usage_loading">Reading…</string>

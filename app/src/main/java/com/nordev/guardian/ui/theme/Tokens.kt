@@ -52,6 +52,7 @@ data class GuardianGradients(
     val heroSetup: Brush,
     val heroHealthy: Brush,
     val heroAttention: Brush,
+    val heroOff: Brush,
     val primaryButton: Brush,
     val barStrong: Brush,
     val barMuted: Brush,
@@ -83,6 +84,12 @@ private fun guardianGradients(
         heroAttention = Brush.linearGradient(
             listOf(
                 status.warningContainer.copy(alpha = if (dark) 0.50f else 0.95f),
+                lightSheen,
+            ),
+        ),
+        heroOff = Brush.linearGradient(
+            listOf(
+                colors.surfaceContainerHigh,
                 lightSheen,
             ),
         ),

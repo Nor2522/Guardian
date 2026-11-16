@@ -38,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import com.nordev.guardian.R
 import com.nordev.guardian.data.prefs.ParentPinRepository
 import com.nordev.guardian.data.prefs.PolicyRepository
+import com.nordev.guardian.data.prefs.SettingsRepository
 import com.nordev.guardian.data.usage.UsageSnapshot
 import com.nordev.guardian.data.web.BlocklistRepository
 import com.nordev.guardian.domain.block.PolicySnapshot
@@ -73,6 +74,8 @@ fun ParentScaffold(
     onOpenNetworkSettings: () -> Unit,
     policyRepository: PolicyRepository,
     pinRepository: ParentPinRepository,
+    settingsRepository: SettingsRepository,
+    startTab: String,
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -88,6 +91,12 @@ fun ParentScaffold(
     val webFilter by remember(policyRepository) { policyRepository.webFilter }
         .collectAsState(initial = WebFilterPolicy.Default)
     val adultList = remember(context) { BlocklistRepository(context).adultList() }
+
+    // The status review action lands on the affected tab. Today stays the
+    // graph start so the bottom bar still clears back to the first tab.
+    LaunchedEffect(Unit) {
+        if (startTab != Routes.PARENT_TODAY) navController.navigate(startTab)
+    }
 
     LaunchedEffect(showLockWarning) {
         if (showLockWarning) {
@@ -210,6 +219,9 @@ fun ParentScaffold(
                     onBack = { navController.popBackStack() },
                     onTurnOffProtection = {
                         policyRepository.saveWebFilter(webFilter.copy(enabled = false))
+                        // The parent is leaving on purpose: the uninstall check
+                        // becomes a neutral Off, not a broken check.
+                        settingsRepository.setUninstallProtectionWanted(false)
                         GuardianProtection.turnOff(context)
                     },
                 )

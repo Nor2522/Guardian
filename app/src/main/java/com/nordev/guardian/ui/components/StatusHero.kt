@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.GppGood
 import androidx.compose.material.icons.outlined.HealthAndSafety
+import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,8 +30,9 @@ import com.nordev.guardian.ui.theme.LocalGuardianGradients
 import com.nordev.guardian.ui.theme.LocalGuardianStatusColors
 
 // The hero states the status screen models: fully on, one or more broken checks,
-// and setup still running. The icon pair is chosen so color never carries the state alone.
-enum class StatusHeroState { Healthy, Attention, Setup }
+// all checks off, and setup still running. The icon pair is chosen so color
+// never carries the state alone.
+enum class StatusHeroState { Healthy, Attention, Off, Setup }
 
 @Composable
 fun StatusHero(
@@ -51,6 +53,11 @@ fun StatusHero(
             gradients.heroAttention,
             status.onWarningContainer,
             Icons.Outlined.Warning,
+        )
+        StatusHeroState.Off -> Triple(
+            gradients.heroOff,
+            MaterialTheme.colorScheme.onSurfaceVariant,
+            Icons.Outlined.Shield,
         )
         StatusHeroState.Setup -> Triple(
             gradients.heroSetup,

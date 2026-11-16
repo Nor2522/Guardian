@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -52,6 +53,7 @@ import com.nordev.guardian.ui.screens.onboarding.PinScreen
 import com.nordev.guardian.ui.screens.onboarding.PrivacyScreen
 import com.nordev.guardian.ui.screens.onboarding.WelcomeScreen
 import com.nordev.guardian.ui.screens.parent.ParentScaffold
+import com.nordev.guardian.ui.screens.status.StatusGateTarget
 import com.nordev.guardian.ui.screens.status.StatusScreen
 import com.nordev.guardian.ui.usage.UsageViewModel
 import kotlinx.coroutines.delay
@@ -108,6 +110,11 @@ fun GuardianNavHost(
     val isParentRoute = currentRoute?.startsWith(Routes.PARENT) == true
     var showLockWarning by remember { mutableStateOf(false) }
     var requestNotifications by remember { mutableStateOf(false) }
+
+    // Review on the status screen arms a destination behind the gate. Nothing
+    // in the child's view changes; the target is consumed on a correct PIN.
+    var pendingStatusTarget by rememberSaveable { mutableStateOf(StatusGateTarget.Parent.name) }
+    var parentStartTab by rememberSaveable { mutableStateOf(Routes.PARENT_TODAY) }
     val vpnConsentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) { result ->
@@ -183,7 +190,10 @@ fun GuardianNavHost(
         NavHost(navController = navController, startDestination = Routes.STATUS) {
             composable(Routes.STATUS) {
                 StatusScreen(
-                    onOpenGate = { navController.navigate(Routes.GATE) },
+                    onOpenGate = { target ->
+                        pendingStatusTarget = target.name
+                        navController.navigate(Routes.GATE)
+                    },
                     usage = usage,
                 )
             }
@@ -197,9 +207,24 @@ fun GuardianNavHost(
                     },
                     onUnlocked = {
                         session.unlock()
-                        navController.navigate(Routes.PARENT) {
+                        val target = StatusGateTarget.entries
+                            .firstOrNull { it.name == pendingStatusTarget }
+                            ?: StatusGateTarget.Parent
+                        val destination = when (target) {
+                            StatusGateTarget.Parent -> {
+                                parentStartTab = Routes.PARENT_TODAY
+                                Routes.PARENT
+                            }
+                            StatusGateTarget.Permissions -> Routes.ONBOARDING_PERMISSIONS
+                            StatusGateTarget.Web -> {
+                                parentStartTab = Routes.PARENT_WEB
+                                Routes.PARENT
+                            }
+                        }
+                        navController.navigate(destination) {
                             popUpTo(Routes.GATE) { inclusive = true }
                         }
+                        pendingStatusTarget = StatusGateTarget.Parent.name
                     },
                 )
             }
@@ -315,6 +340,8 @@ fun GuardianNavHost(
                     },
                     policyRepository = policyRepository,
                     pinRepository = repository,
+                    settingsRepository = settingsRepository,
+                    startTab = parentStartTab,
                 )
             }
         }
