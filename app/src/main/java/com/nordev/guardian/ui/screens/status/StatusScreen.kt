@@ -164,8 +164,8 @@ fun StatusScreen(
                 .fillMaxHeight()
                 .widthIn(max = GuardianSpacing.maxContentWidth)
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
                 .statusBarsPadding()
+                .verticalScroll(rememberScrollState())
                 .windowInsetsPadding(WindowInsets.navigationBars)
                 .padding(horizontal = GuardianSpacing.gutter),
         ) {

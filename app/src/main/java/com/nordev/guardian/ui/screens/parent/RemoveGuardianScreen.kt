@@ -132,8 +132,8 @@ fun RemoveGuardianScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
             Spacer(Modifier.height(16.dp))
