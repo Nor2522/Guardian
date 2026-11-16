@@ -1,26 +1,18 @@
 package com.nordev.guardian.ui.screens.gate
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import com.nordev.guardian.R
 import com.nordev.guardian.data.prefs.ParentPinRepository
 import com.nordev.guardian.data.prefs.PinVerifyResult
+import com.nordev.guardian.ui.components.GuardianPrimaryButton
+import com.nordev.guardian.ui.components.IconBadge
 import com.nordev.guardian.ui.components.PinField
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -83,11 +77,7 @@ fun GateScreen(
     }
 
     if (loading || !hasPin) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-        )
+        Box(modifier = Modifier.fillMaxSize())
         return
     }
 
@@ -104,26 +94,17 @@ fun GateScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .widthIn(max = 400.dp)
+                    .widthIn(max = 420.dp)
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp, vertical = 32.dp),
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(88.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceContainer,
-                            shape = CircleShape,
-                        ),
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Lock,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(48.dp),
-                    )
-                }
+                IconBadge(
+                    icon = Icons.Outlined.Lock,
+                    size = 96.dp,
+                    iconSize = 42.dp,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
                 Spacer(Modifier.height(24.dp))
                 Text(
                     text = stringResource(R.string.gate_title),
@@ -135,9 +116,10 @@ fun GateScreen(
                 Text(
                     text = stringResource(R.string.gate_prompt),
                     style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(28.dp))
                 PinField(
                     value = pin,
                     onValueChange = {
@@ -165,8 +147,13 @@ fun GateScreen(
                         },
                     )
                 }
-                Spacer(Modifier.height(16.dp))
-                Button(
+                Spacer(Modifier.height(20.dp))
+                GuardianPrimaryButton(
+                    label = if (checking) {
+                        stringResource(R.string.gate_checking)
+                    } else {
+                        stringResource(R.string.gate_unlock)
+                    },
                     onClick = {
                         val candidate = pin
                         checking = true
@@ -200,29 +187,9 @@ fun GateScreen(
                         }
                     },
                     enabled = pin.length == 6 && !checking && !locked,
-                    shape = MaterialTheme.shapes.extraLarge,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp),
-                ) {
-                    if (checking) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.gate_checking),
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    } else {
-                        Text(
-                            text = stringResource(R.string.gate_unlock),
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    }
-                }
+                    loading = checking,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
         Text(

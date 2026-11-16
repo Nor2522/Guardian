@@ -1,9 +1,7 @@
 package com.nordev.guardian.ui.screens.parent
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
@@ -16,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.FlowRow
@@ -28,7 +25,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,7 +44,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.nordev.guardian.R
 import com.nordev.guardian.data.usage.UsageRepository
@@ -56,8 +54,12 @@ import com.nordev.guardian.domain.model.Schedule
 import com.nordev.guardian.domain.model.ScheduleMode
 import com.nordev.guardian.domain.schedule.ScheduleWindow
 import com.nordev.guardian.ui.components.EmptyState
+import com.nordev.guardian.ui.components.GuardianCard
+import com.nordev.guardian.ui.components.GuardianPrimaryButton
 import com.nordev.guardian.ui.components.GuardianTopBar
+import com.nordev.guardian.ui.components.IconBadge
 import com.nordev.guardian.ui.components.SectionHeader
+import com.nordev.guardian.ui.theme.GuardianSpacing
 import java.time.DayOfWeek
 import java.util.UUID
 
@@ -76,7 +78,10 @@ fun SchedulesScreen(
     var editorOpen by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Schedule?>(null) }
 
-    Scaffold(topBar = { GuardianTopBar(title = stringResource(R.string.tab_schedules), onSettings = onOpenSettings) }) { innerPadding ->
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = { GuardianTopBar(title = stringResource(R.string.tab_schedules), onSettings = onOpenSettings) },
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -91,24 +96,11 @@ fun SchedulesScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(16.dp))
-            FilledTonalButton(
+            GuardianPrimaryButton(
+                label = stringResource(R.string.schedules_add),
                 onClick = { editing = null; editorOpen = true },
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.schedules_add),
-                    style = MaterialTheme.typography.labelLarge,
-                )
-            }
+                icon = Icons.Outlined.Add,
+            )
             Spacer(Modifier.height(32.dp))
             SectionHeader(
                 title = stringResource(R.string.section_schedules),
@@ -175,74 +167,64 @@ private fun ScheduleCard(
         other.id != schedule.id && other.enabled && ScheduleWindow.overlaps(other, schedule)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                shape = RoundedCornerShape(16.dp),
-            )
-            .clickable(onClick = onEdit)
-            .padding(16.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+    GuardianCard(modifier = Modifier.padding(bottom = GuardianSpacing.sm)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onEdit)
+                .padding(GuardianSpacing.lg),
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        shape = RoundedCornerShape(12.dp),
-                    ),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Shield,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(22.dp),
+                IconBadge(
+                    icon = Icons.Outlined.Shield,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.tertiary,
+                )
+                Spacer(Modifier.width(GuardianSpacing.md))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = schedule.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = scheduleSummary(schedule),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Spacer(Modifier.width(GuardianSpacing.sm))
+                Switch(
+                    checked = schedule.enabled,
+                    onCheckedChange = { onToggle() },
                 )
             }
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = schedule.name,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = scheduleSummary(schedule),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Switch(
-                checked = schedule.enabled,
-                onCheckedChange = { onToggle() },
-            )
-        }
-        Spacer(Modifier.height(12.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = chipColor,
-                contentColor = chipContentColor,
+            Spacer(Modifier.height(GuardianSpacing.md))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(GuardianSpacing.sm),
             ) {
-                Text(
-                    text = scheduleModeLabel(mode = schedule.mode),
-                    style = MaterialTheme.typography.labelLarge,
-                )
-            }
-            if (overlap) {
-                Text(
-                    text = stringResource(R.string.schedules_overlaps, schedule.name),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = chipColor,
+                    contentColor = chipContentColor,
+                ) {
+                    Text(
+                        text = scheduleModeLabel(mode = schedule.mode),
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    )
+                }
+                if (overlap) {
+                    Text(
+                        text = stringResource(R.string.schedules_overlaps, schedule.name),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
@@ -350,13 +332,11 @@ private fun ScheduleEditor(
                     selected = mode == ScheduleMode.PAUSE_ALL,
                     onClick = { mode = ScheduleMode.PAUSE_ALL },
                     label = { Text(text = stringResource(R.string.schedules_editor_mode_pause_all)) },
-                    modifier = Modifier.height(32.dp),
                 )
                 FilterChip(
                     selected = mode == ScheduleMode.STUDY,
                     onClick = { mode = ScheduleMode.STUDY },
                     label = { Text(text = stringResource(R.string.schedules_editor_mode_study)) },
-                    modifier = Modifier.height(32.dp),
                 )
             }
             Spacer(Modifier.height(8.dp))

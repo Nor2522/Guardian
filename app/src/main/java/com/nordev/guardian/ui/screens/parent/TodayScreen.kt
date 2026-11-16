@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -48,6 +49,7 @@ fun TodayScreen(
     val dateFormat = remember(locale) { DateTimeFormatter.ofPattern("EEEE, d MMMM", locale) }
     val dateLine = dateFormat.format(LocalDate.now())
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             GuardianTopBar(
                 title = stringResource(R.string.tab_today),

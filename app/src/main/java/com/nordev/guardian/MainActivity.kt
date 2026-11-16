@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.nordev.guardian.ui.components.GuardianBackground
 import com.nordev.guardian.ui.nav.GuardianNavHost
 import com.nordev.guardian.ui.nav.ThemeMode
 import com.nordev.guardian.ui.theme.GuardianTheme
@@ -38,11 +39,13 @@ class MainActivity : ComponentActivity() {
                     ThemeMode.Dark -> true
                 },
             ) {
-                GuardianNavHost(
-                    themeMode = themeMode,
-                    onThemeChange = { themeMode = it },
-                    onSecureChange = { secure = it },
-                )
+                GuardianBackground {
+                    GuardianNavHost(
+                        themeMode = themeMode,
+                        onThemeChange = { themeMode = it },
+                        onSecureChange = { secure = it },
+                    )
+                }
             }
         }
     }

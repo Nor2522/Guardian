@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -48,6 +49,7 @@ fun PinField(
             onValueChange = { next -> onValueChange(next.filter { it.isDigit() }.take(digitCount)) },
             label = { Text(text = label) },
             singleLine = true,
+            shape = MaterialTheme.shapes.medium,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
             isError = isError,
@@ -69,6 +71,7 @@ fun PinField(
         Spacer(Modifier.height(8.dp))
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .padding(start = 16.dp)
                 .semantics { stateDescription = stateText },
@@ -77,10 +80,10 @@ fun PinField(
                 val filled = index < value.length
                 Box(
                     modifier = Modifier
-                        .size(12.dp)
+                        .size(if (filled) 12.dp else 10.dp)
                         .background(
                             color = if (filled) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.surfaceVariant,
+                            else MaterialTheme.colorScheme.surfaceContainerHigh,
                             shape = CircleShape,
                         ),
                 )

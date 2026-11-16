@@ -1,16 +1,12 @@
 package com.nordev.guardian.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.nordev.guardian.ui.theme.GuardianSizes
 
 // Empty states carry title, one sentence, and one action; the action is optional in
 // the signature only so a screen whose ProblemCard already owns the fix action
@@ -34,21 +31,17 @@ fun EmptyState(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(64.dp)
-                .background(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = CircleShape),
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(28.dp),
-            )
-        }
+        IconBadge(
+            icon = icon,
+            size = GuardianSizes.iconBadgeLarge,
+            iconSize = 28.dp,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        )
         Spacer(Modifier.height(16.dp))
         Text(
             text = title,
@@ -56,7 +49,7 @@ fun EmptyState(
             textAlign = TextAlign.Center,
         )
         if (body != null) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
                 text = body,
                 style = MaterialTheme.typography.bodyMedium,
@@ -65,7 +58,7 @@ fun EmptyState(
             )
         }
         if (actionLabel != null && onAction != null) {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(20.dp))
             FilledTonalButton(
                 onClick = onAction,
                 shape = MaterialTheme.shapes.extraLarge,

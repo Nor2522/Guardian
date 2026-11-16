@@ -12,27 +12,32 @@ fun guardianTypography(base: Typography = Typography()): Typography = Typography
         fontSize = 36.sp,
         lineHeight = 44.sp,
         fontWeight = FontWeight.Normal,
+        letterSpacing = (-0.6).sp,
         fontFeatureSettings = TNUM,
     ),
     headlineLarge = base.headlineLarge.copy(
         fontSize = 32.sp,
         lineHeight = 40.sp,
         fontWeight = FontWeight.Normal,
+        letterSpacing = (-0.4).sp,
     ),
     headlineMedium = base.headlineMedium.copy(
         fontSize = 28.sp,
         lineHeight = 36.sp,
         fontWeight = FontWeight.Normal,
+        letterSpacing = (-0.3).sp,
     ),
     headlineSmall = base.headlineSmall.copy(
         fontSize = 24.sp,
         lineHeight = 32.sp,
         fontWeight = FontWeight.Normal,
+        letterSpacing = (-0.2).sp,
     ),
     titleLarge = base.titleLarge.copy(
         fontSize = 22.sp,
         lineHeight = 28.sp,
         fontWeight = FontWeight.Medium,
+        letterSpacing = (-0.1).sp,
     ),
     titleMedium = base.titleMedium.copy(
         fontSize = 16.sp,

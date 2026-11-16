@@ -17,6 +17,7 @@ fun GuardianTheme(
     ) {
         CompositionLocalProvider(
             LocalGuardianStatusColors provides if (darkTheme) DarkStatusColors else LightStatusColors,
+            LocalGuardianGradients provides if (darkTheme) DarkGradients else LightGradients,
         ) {
             content()
         }

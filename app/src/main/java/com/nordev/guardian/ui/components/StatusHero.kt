@@ -6,24 +6,26 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.GppGood
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Warning
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.nordev.guardian.ui.theme.GuardianSizes
+import com.nordev.guardian.ui.theme.LocalGuardianGradients
 import com.nordev.guardian.ui.theme.LocalGuardianStatusColors
 
 // The hero states the status screen models: fully on, one or more broken checks,
@@ -38,53 +40,73 @@ fun StatusHero(
     modifier: Modifier = Modifier,
 ) {
     val status = LocalGuardianStatusColors.current
-    val (container, onContainer, icon) = when (state) {
+    val gradients = LocalGuardianGradients.current
+    val (gradient, onContainer, icon) = when (state) {
         StatusHeroState.Healthy -> Triple(
-            status.successContainer,
+            gradients.heroHealthy,
             status.onSuccessContainer,
-            Icons.Outlined.GppGood as ImageVector,
+            Icons.Outlined.GppGood,
         )
         StatusHeroState.Attention -> Triple(
-            status.warningContainer,
+            gradients.heroAttention,
             status.onWarningContainer,
-            Icons.Outlined.Warning as ImageVector,
+            Icons.Outlined.Warning,
         )
         StatusHeroState.Setup -> Triple(
-            MaterialTheme.colorScheme.primaryContainer,
+            gradients.heroSetup,
             MaterialTheme.colorScheme.onPrimaryContainer,
-            Icons.Outlined.HealthAndSafety as ImageVector,
+            Icons.Outlined.HealthAndSafety,
         )
     }
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.fillMaxWidth(),
+    val shape = MaterialTheme.shapes.large
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(gradient)
+            .drawBehind {
+                val ink = onContainer.copy(alpha = 0.07f)
+                drawCircle(
+                    color = ink,
+                    radius = size.width * 0.52f,
+                    center = Offset(size.width * 0.96f, -size.height * 0.10f),
+                    style = Stroke(width = 24.dp.toPx()),
+                )
+                drawCircle(
+                    color = ink.copy(alpha = 0.45f),
+                    radius = size.width * 0.66f,
+                    center = Offset(size.width * 0.96f, -size.height * 0.10f),
+                    style = Stroke(width = 1.dp.toPx()),
+                )
+            }
+            .padding(horizontal = 20.dp, vertical = 24.dp),
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(72.dp)
-                .background(color = container, shape = CircleShape),
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = onContainer,
-                modifier = Modifier.size(32.dp),
+            IconBadge(
+                icon = icon,
+                size = GuardianSizes.iconBadgeLarge,
+                iconSize = 30.dp,
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+                contentColor = onContainer,
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                color = onContainer,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.semantics { heading() },
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodyMedium,
+                color = onContainer.copy(alpha = 0.78f),
+                textAlign = TextAlign.Center,
             )
         }
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.semantics { heading() },
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
     }
 }

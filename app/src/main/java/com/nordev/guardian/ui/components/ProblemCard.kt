@@ -1,18 +1,22 @@
 package com.nordev.guardian.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,36 +44,63 @@ fun ProblemCard(
     val status = LocalGuardianStatusColors.current
     val container = if (blocking) status.warningContainer else MaterialTheme.colorScheme.surfaceContainerLow
     val contentColor = if (blocking) status.onWarningContainer else MaterialTheme.colorScheme.onSurface
-    Card(
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = container,
-            contentColor = contentColor,
-        ),
+    val accent = if (blocking) status.warning else MaterialTheme.colorScheme.primary
+    val muted = if (blocking) {
+        status.onWarningContainer.copy(alpha = 0.80f)
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    GuardianCard(
         modifier = modifier,
+        containerColor = container,
+        contentColor = contentColor,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = if (blocking) Icons.Outlined.Warning else Icons.Outlined.Info,
-                    contentDescription = null,
-                    tint = if (blocking) status.warning else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(24.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(text = title, style = MaterialTheme.typography.titleMedium)
-            }
-            Spacer(Modifier.height(4.dp))
-            Text(text = body, style = MaterialTheme.typography.bodyMedium)
-            if (actionLabel != null && onAction != null) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(4.dp)
+                    .background(accent),
+            )
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconBadge(
+                        icon = if (blocking) Icons.Outlined.Warning else Icons.Outlined.Info,
+                        size = 40.dp,
+                        iconSize = 20.dp,
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.70f),
+                        contentColor = accent,
+                        halo = false,
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Text(text = title, style = MaterialTheme.typography.titleMedium)
+                }
                 Spacer(Modifier.height(8.dp))
-                TextButton(
-                    onClick = onAction,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = if (blocking) status.warning else MaterialTheme.colorScheme.primary,
-                    ),
-                ) {
-                    Text(text = actionLabel, style = MaterialTheme.typography.labelLarge)
+                Text(
+                    text = body,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = muted,
+                )
+                if (actionLabel != null && onAction != null) {
+                    Spacer(Modifier.height(4.dp))
+                    TextButton(
+                        onClick = onAction,
+                        colors = ButtonDefaults.textButtonColors(contentColor = accent),
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    ) {
+                        Text(text = actionLabel, style = MaterialTheme.typography.labelLarge)
+                        Spacer(Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.width(16.dp),
+                        )
+                    }
                 }
             }
         }

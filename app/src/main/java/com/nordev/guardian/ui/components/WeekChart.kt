@@ -1,5 +1,8 @@
 package com.nordev.guardian.ui.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,16 +12,18 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -27,6 +32,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.nordev.guardian.R
 import com.nordev.guardian.data.usage.DayUsage
+import com.nordev.guardian.ui.theme.GuardianMotion
+import com.nordev.guardian.ui.theme.LocalGuardianGradients
 import java.time.format.DateTimeFormatter
 
 // One bar per day, oldest first and today last. The chart is one accessibility
@@ -50,17 +57,12 @@ fun WeekChart(
         durationText(weekMillis, none),
         dayParts.joinToString(", "),
     )
+    val gradients = LocalGuardianGradients.current
 
-    Card(
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
-        modifier = modifier.fillMaxWidth(),
-    ) {
+    GuardianCard(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(20.dp)
                 .clearAndSetSemantics { contentDescription = description },
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -77,12 +79,12 @@ fun WeekChart(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(20.dp))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(112.dp),
+                    .height(120.dp),
             ) {
                 days.forEachIndexed { index, day ->
                     val fraction = if (maxMillis > 0L) {
@@ -90,6 +92,14 @@ fun WeekChart(
                     } else {
                         0f
                     }
+                    val animatedFraction by animateFloatAsState(
+                        targetValue = fraction,
+                        animationSpec = tween(
+                            durationMillis = GuardianMotion.slowMillis,
+                            easing = FastOutSlowInEasing,
+                        ),
+                        label = "weekBar",
+                    )
                     val isToday = index == days.lastIndex
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -98,20 +108,25 @@ fun WeekChart(
                     ) {
                         Box(
                             contentAlignment = Alignment.BottomCenter,
-                            modifier = Modifier.height(88.dp),
+                            modifier = Modifier.height(92.dp),
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.64f)
+                                    .height(92.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f),
+                                    ),
+                            )
                             if (day.millis > 0L) {
                                 Box(
                                     modifier = Modifier
-                                        .fillMaxWidth(0.62f)
-                                        .height((88f * fraction).coerceAtLeast(4f).dp)
+                                        .fillMaxWidth(0.64f)
+                                        .height((92f * animatedFraction).coerceAtLeast(5f).dp)
+                                        .clip(RoundedCornerShape(8.dp))
                                         .background(
-                                            color = if (isToday) {
-                                                MaterialTheme.colorScheme.primary
-                                            } else {
-                                                MaterialTheme.colorScheme.primaryContainer
-                                            },
-                                            shape = RoundedCornerShape(6.dp),
+                                            if (isToday) gradients.barStrong else gradients.barMuted,
                                         ),
                                 )
                             }
@@ -126,6 +141,15 @@ fun WeekChart(
                                 MaterialTheme.colorScheme.onSurfaceVariant
                             },
                             maxLines = 1,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(4.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                ),
                         )
                     }
                 }

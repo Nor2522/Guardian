@@ -28,15 +28,12 @@ import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -59,8 +57,16 @@ import com.nordev.guardian.R
 import com.nordev.guardian.data.usage.UsageRepository
 import com.nordev.guardian.data.usage.UsageSnapshot
 import com.nordev.guardian.ui.components.EmptyState
+import com.nordev.guardian.ui.components.GuardianCard
+import com.nordev.guardian.ui.components.GuardianPrimaryButton
+import com.nordev.guardian.ui.components.GuardianProgressBar
+import com.nordev.guardian.ui.components.GuardianTone
 import com.nordev.guardian.ui.components.GuardianTopBar
 import com.nordev.guardian.ui.components.SectionHeader
+import com.nordev.guardian.ui.components.StatusPill
+import com.nordev.guardian.ui.theme.GuardianSizes
+import com.nordev.guardian.ui.theme.GuardianSpacing
+import com.nordev.guardian.ui.theme.LocalGuardianStatusColors
 
 private const val MIN_LIMIT_MINUTES = 5
 private const val MAX_LIMIT_MINUTES = 720
@@ -82,6 +88,7 @@ fun LimitsScreen(
     val repository = remember { UsageRepository(context) }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             GuardianTopBar(
                 title = stringResource(R.string.tab_limits),
@@ -103,24 +110,11 @@ fun LimitsScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(16.dp))
-            FilledTonalButton(
+            GuardianPrimaryButton(
+                label = stringResource(R.string.limits_choose),
                 onClick = { pickerOpen = true },
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.limits_choose),
-                    style = MaterialTheme.typography.labelLarge,
-                )
-            }
+                icon = Icons.Outlined.Add,
+            )
             Spacer(Modifier.height(32.dp))
             SectionHeader(
                 title = stringResource(R.string.section_apps_limits),
@@ -191,66 +185,70 @@ private fun LimitRow(
     val reached = usedMillis >= limitMinutes * 60_000L
     val fraction = (usedMillis / (limitMinutes * 60_000L).toFloat()).coerceIn(0f, 1f)
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onEdit)
-            .padding(vertical = 8.dp),
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
+    GuardianCard(modifier = Modifier.padding(bottom = GuardianSpacing.sm)) {
+        Column(
             modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                .fillMaxWidth()
+                .clickable(onClick = onEdit)
+                .heightIn(min = GuardianSizes.minTouch)
+                .padding(GuardianSpacing.lg),
         ) {
-            val icon = remember(packageName) { appIcon(context, packageName) }
-            if (icon != null) {
-                Image(
-                    bitmap = icon.asImageBitmap(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.size(40.dp),
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Outlined.Android,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(22.dp),
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                ) {
+                    val icon = remember(packageName) { appIcon(context, packageName) }
+                    if (icon != null) {
+                        Image(
+                            bitmap = icon.asImageBitmap(),
+                            contentDescription = null,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.size(40.dp),
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.Android,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.width(GuardianSpacing.md))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = stringResource(R.string.limits_used_of, usedMinutes, limitMinutes),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (reached) {
+                    Spacer(Modifier.width(GuardianSpacing.sm))
+                    StatusPill(
+                        text = stringResource(R.string.limits_reached),
+                        tone = GuardianTone.Attention,
+                    )
+                }
             }
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            Spacer(Modifier.height(GuardianSpacing.md))
+            GuardianProgressBar(
+                progress = fraction,
+                color = if (reached) {
+                    LocalGuardianStatusColors.current.warning
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
             )
-            Text(
-                text = stringResource(R.string.limits_used_of, usedMinutes, limitMinutes),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            LinearProgressIndicator(
-                progress = { fraction },
-                modifier = Modifier.fillMaxWidth().height(4.dp),
-            )
-        }
-        if (reached) {
-            Spacer(Modifier.width(8.dp))
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            ) {
-                Text(
-                    text = stringResource(R.string.limits_reached),
-                    style = MaterialTheme.typography.labelLarge,
-                )
-            }
         }
     }
 }

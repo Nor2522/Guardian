@@ -15,11 +15,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -44,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -57,10 +57,15 @@ import com.nordev.guardian.data.web.WebFilterStatusReader
 import com.nordev.guardian.domain.web.DomainName
 import com.nordev.guardian.domain.web.WebFilterPolicy
 import com.nordev.guardian.ui.components.EmptyState
+import com.nordev.guardian.ui.components.GuardianCard
 import com.nordev.guardian.ui.components.GuardianTopBar
+import com.nordev.guardian.ui.components.IconBadge
 import com.nordev.guardian.ui.components.ProblemCard
 import com.nordev.guardian.ui.components.ProblemSeverity
 import com.nordev.guardian.ui.components.SectionHeader
+import com.nordev.guardian.ui.theme.GuardianSizes
+import com.nordev.guardian.ui.theme.GuardianSpacing
+import com.nordev.guardian.ui.theme.LocalGuardianGradients
 import com.nordev.guardian.ui.theme.LocalGuardianStatusColors
 import java.text.NumberFormat
 import kotlinx.coroutines.delay
@@ -104,6 +109,7 @@ fun WebScreen(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             GuardianTopBar(
                 title = stringResource(R.string.tab_web),
@@ -151,13 +157,14 @@ fun WebScreen(
                     title = stringResource(R.string.empty_web),
                 )
             } else {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    ),
-                ) {
+                GuardianCard {
                     policy.customDomains.sorted().forEachIndexed { index, domain ->
-                        if (index > 0) HorizontalDivider()
+                        if (index > 0) {
+                            HorizontalDivider(
+                                color = LocalGuardianGradients.current.cardBorder,
+                                thickness = GuardianSpacing.hairline,
+                            )
+                        }
                         SiteRow(
                             domain = domain,
                             onRemove = { pendingRemoval = domain },
@@ -165,13 +172,13 @@ fun WebScreen(
                     }
                 }
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(GuardianSpacing.lg))
             OutlinedButton(
                 onClick = onAddSite,
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp),
+                    .heightIn(min = GuardianSizes.minTouch),
             ) {
                 Text(
                     text = stringResource(R.string.web_add_site),
@@ -281,31 +288,33 @@ private fun WebStatusCard(
 @Composable
 private fun OnStatusCard() {
     val statusColors = LocalGuardianStatusColors.current
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = statusColors.successContainer,
-            contentColor = statusColors.onSuccessContainer,
-        ),
+    GuardianCard(
+        containerColor = statusColors.successContainer,
+        contentColor = statusColors.onSuccessContainer,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Outlined.Shield,
-                    contentDescription = null,
-                    tint = statusColors.success,
-                    modifier = Modifier.size(24.dp),
-                )
-                Spacer(Modifier.width(8.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(GuardianSpacing.lg),
+        ) {
+            IconBadge(
+                icon = Icons.Outlined.Shield,
+                containerColor = statusColors.success,
+                contentColor = statusColors.onSuccessContainer,
+            )
+            Spacer(Modifier.width(GuardianSpacing.md))
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(R.string.web_status_on_title),
                     style = MaterialTheme.typography.titleMedium,
                 )
+                Spacer(Modifier.height(GuardianSpacing.xxs))
+                Text(
+                    text = stringResource(R.string.web_status_on_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
             }
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = stringResource(R.string.web_status_on_body),
-                style = MaterialTheme.typography.bodyMedium,
-            )
         }
     }
 }
@@ -315,33 +324,37 @@ private fun FilterSwitchRow(
     enabled: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .padding(vertical = 4.dp),
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.web_filter_switch),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = stringResource(R.string.web_filter_switch_supporting),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+    GuardianCard {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = GuardianSizes.minTouch)
+                .padding(GuardianSpacing.lg),
+        ) {
+            IconBadge(icon = Icons.Outlined.Public)
+            Spacer(Modifier.width(GuardianSpacing.md))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.web_filter_switch),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Spacer(Modifier.height(GuardianSpacing.xxs))
+                Text(
+                    text = stringResource(R.string.web_filter_switch_supporting),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.width(GuardianSpacing.md))
+            Switch(
+                checked = enabled,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                ),
             )
         }
-        Spacer(Modifier.width(12.dp))
-        Switch(
-            checked = enabled,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedTrackColor = MaterialTheme.colorScheme.primary,
-            ),
-        )
     }
 }
 
@@ -355,7 +368,8 @@ private fun SiteRow(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 4.dp, top = 2.dp, bottom = 2.dp),
+            .heightIn(min = GuardianSizes.minTouch)
+            .padding(start = GuardianSpacing.lg, end = GuardianSpacing.xs),
     ) {
         Text(
             text = display,
