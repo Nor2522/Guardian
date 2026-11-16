@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.nordev.guardian.R
 import com.nordev.guardian.ui.components.ProtectionRow
+import com.nordev.guardian.ui.components.ProtectionState
 
 // The three checks never pass in this step, so they are listed as Off — the
 // same states the status screen reports once checks ship.
@@ -44,16 +45,19 @@ fun DoneScreen(
             icon = Icons.Outlined.Timelapse,
             title = stringResource(R.string.check_app_limits),
             stateText = stringResource(R.string.permission_state_off),
+            state = ProtectionState.Off,
         )
         ProtectionRow(
             icon = Icons.Outlined.Public,
             title = stringResource(R.string.check_web_filter),
             stateText = stringResource(R.string.permission_state_off),
+            state = ProtectionState.Off,
         )
         ProtectionRow(
             icon = Icons.Outlined.Shield,
             title = stringResource(R.string.check_uninstall),
             stateText = stringResource(R.string.permission_state_off),
+            state = ProtectionState.Off,
         )
         Spacer(Modifier.height(16.dp))
         Text(

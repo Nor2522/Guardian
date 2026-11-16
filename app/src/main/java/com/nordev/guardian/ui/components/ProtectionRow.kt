@@ -1,8 +1,10 @@
 package com.nordev.guardian.ui.components
 
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -15,8 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.nordev.guardian.ui.theme.GuardianSpacing
 import com.nordev.guardian.ui.theme.LocalGuardianStatusColors
 
 // On, Off, and Attention let the row choose a tone and icon tint without
@@ -54,14 +58,7 @@ fun ProtectionRow(
         ProtectionState.Off, ProtectionState.Unknown -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val reasonColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .heightIn(min = 72.dp)
-            .padding(vertical = 12.dp)
-            .semantics(mergeDescendants = true) {},
-    ) {
+    val badge: @Composable () -> Unit = {
         IconBadge(
             icon = icon,
             size = 44.dp,
@@ -69,13 +66,14 @@ fun ProtectionRow(
             containerColor = iconContainer,
             contentColor = iconContent,
         )
-        Spacer(Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
+    }
+    val body: @Composable (Modifier) -> Unit = { bodyModifier ->
+        Column(modifier = bodyModifier) {
             Text(text = title, style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(GuardianSpacing.xs))
             StatusPill(text = stateText, tone = tone)
             if (reason != null) {
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(GuardianSpacing.xxs))
                 Text(
                     text = reason,
                     style = MaterialTheme.typography.bodyMedium,
@@ -83,13 +81,52 @@ fun ProtectionRow(
                 )
             }
         }
+    }
+    val action: @Composable (Modifier) -> Unit = { actionModifier ->
         if (actionLabel != null && onAction != null) {
-            Spacer(Modifier.width(8.dp))
             TextButton(
                 onClick = onAction,
-                modifier = Modifier.heightIn(min = 48.dp),
+                modifier = actionModifier.heightIn(min = 48.dp),
             ) {
                 Text(text = actionLabel, style = MaterialTheme.typography.labelLarge)
+            }
+        }
+    }
+
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        // Below this width a side action steals most of the text column, so the
+        // action moves under the copy instead of squeezing it into slivers.
+        val stackAction = maxWidth < 360.dp || LocalDensity.current.fontScale >= 1.5f
+        if (stackAction) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = GuardianSpacing.sm)
+                    .semantics(mergeDescendants = true) {},
+            ) {
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    badge()
+                    Spacer(Modifier.width(GuardianSpacing.md))
+                    body(Modifier.weight(1f))
+                }
+                action(Modifier.align(Alignment.End))
+            }
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 72.dp)
+                    .padding(vertical = GuardianSpacing.md)
+                    .semantics(mergeDescendants = true) {},
+            ) {
+                badge()
+                Spacer(Modifier.width(GuardianSpacing.md))
+                body(Modifier.weight(1f))
+                action(Modifier.padding(start = GuardianSpacing.sm))
             }
         }
     }
