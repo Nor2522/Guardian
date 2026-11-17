@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 // window package and class only; it never reads the text on the screen.
 enum class GuardKind {
     WebFilterSettings,
+    AdminProtection,
 }
 
 // Memory-only, same process as the accessibility service. A correct PIN grants

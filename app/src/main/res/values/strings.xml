@@ -56,6 +56,10 @@
     <string name="guard_unlock">Unlock settings</string>
     <string name="guard_go_home">Go home</string>
     <string name="guard_grace_note">After a correct PIN, settings stay unlocked for 60 seconds.</string>
+    <string name="guard_admin_title">Uninstall protection is on</string>
+    <string name="guard_admin_body">Enter your parent PIN to change it. Turning it off lets the child remove Guardian without the parent PIN.</string>
+    <string name="guard_admin_unlock">Unlock protection</string>
+    <string name="guard_admin_grace_note">After a correct PIN, protection stays unlocked for 60 seconds.</string>
 
     <!-- Onboarding shell -->
     <string name="onboarding_progress">Step %1$d of 5</string>

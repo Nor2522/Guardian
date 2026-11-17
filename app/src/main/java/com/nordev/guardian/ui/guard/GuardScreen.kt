@@ -79,9 +79,19 @@ fun GuardScreen(
     val locked = remainingSeconds > 0
     val title = when (kind) {
         GuardKind.WebFilterSettings -> stringResource(R.string.guard_web_title)
+        GuardKind.AdminProtection -> stringResource(R.string.guard_admin_title)
     }
     val body = when (kind) {
         GuardKind.WebFilterSettings -> stringResource(R.string.guard_web_body)
+        GuardKind.AdminProtection -> stringResource(R.string.guard_admin_body)
+    }
+    val unlockLabel = when (kind) {
+        GuardKind.WebFilterSettings -> stringResource(R.string.guard_unlock)
+        GuardKind.AdminProtection -> stringResource(R.string.guard_admin_unlock)
+    }
+    val graceNote = when (kind) {
+        GuardKind.WebFilterSettings -> stringResource(R.string.guard_grace_note)
+        GuardKind.AdminProtection -> stringResource(R.string.guard_admin_grace_note)
     }
 
     fun confirm() {
@@ -191,7 +201,7 @@ fun GuardScreen(
                     )
                 } else {
                     Text(
-                        text = stringResource(R.string.guard_grace_note),
+                        text = graceNote,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
@@ -202,7 +212,7 @@ fun GuardScreen(
                     label = if (checking) {
                         stringResource(R.string.gate_checking)
                     } else {
-                        stringResource(R.string.guard_unlock)
+                        unlockLabel
                     },
                     onClick = { confirm() },
                     enabled = pin.length == 6 && !checking && !locked,

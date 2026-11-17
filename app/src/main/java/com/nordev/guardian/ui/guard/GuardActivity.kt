@@ -29,8 +29,10 @@ class GuardActivity : ComponentActivity() {
                 val kind = GuardState.kind
                 val pinRepository = remember { ParentPinRepository(applicationContext) }
 
+                // onUnlocked and onGoHome both clear the kind and finish, so
+                // this only covers a guard that lost its kind while hidden.
                 LaunchedEffect(kind) {
-                    if (kind == null) finish()
+                    if (kind == null && !isFinishing) finish()
                 }
 
                 if (kind != null) {
