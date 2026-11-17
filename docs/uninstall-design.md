@@ -38,12 +38,25 @@ Settings > Remove Guardian (`parent/settings/remove`):
 
 ## Guard behavior
 
-- Trigger: a window from `com.android.settings` whose class ends in
-  `DeviceAdminAdd` or equals the Samsung class above.
+- Trigger: a window from a Settings package (`com.android.settings` or
+  `com.samsung.android.settings`) whose class ends in `DeviceAdminAdd` or equals
+  the Samsung class above. The guard is armed only while the parent's own
+  "uninstall protection" switch is on, so a parent who turned it off is not
+  gated.
+- Class source: the window class decides first. On the SM-A155F the Samsung
+  deactivation screen is an appcompat dialog, so the accessibility event reports
+  `androidx.appcompat.app.AlertDialog` and the activity name never appears.
+  When the window class does not match, the service asks `UsageStatsManager`
+  for the activity that resumed in that package during the last two seconds and
+  matches that class instead. It is package and class information only: no view
+  is read, no text is compared, and no gesture is performed.
 - Host: the existing block activity, in a dedicated admin-guard mode. It keeps
   its own empty task, ignores Back, and lets Home work.
-- Copy: "Uninstall protection is on" / "Enter your parent PIN to change it."
-  The PIN pad is the existing gate, including the wrong-try lockout.
+- Copy: "Uninstall protection is on" / "Enter your parent PIN to change it.
+  Turning it off lets the child remove Guardian without the parent PIN." The
+  unlock button reads "Unlock protection", and the grace note under it reads
+  "After a correct PIN, protection stays unlocked for 60 seconds." The PIN pad
+  is the existing gate, including the wrong-try lockout.
 - Correct PIN: set a 60 second grace timestamp, close the host, and return to
   Settings. The guard ignores the screen while the grace lasts, so the parent
   can finish deactivating or uninstalling.
@@ -74,6 +87,13 @@ Settings > Remove Guardian (`parent/settings/remove`):
   the disclosure copy stays as written in `design.md`.
 
 ## Verification plan
+
+Measured on the SM-A155F: the Samsung deactivation screen refuses any intent
+that carries `FLAG_ACTIVITY_NEW_TASK` and finishes itself (`SecDeviceAdminAdd:
+Cannot start ADD_DEVICE_ADMIN as a new task`). `adb shell am start` always sets
+that flag, so the screen is verified from inside Settings, never from adb. The
+same screen also hides its activity name from Accessibility, which is why the
+guard resolves the class from UsageStats as described above.
 
 - Admin active, `adb shell pm uninstall com.nordev.guardian` fails with the
   device-admin error.
