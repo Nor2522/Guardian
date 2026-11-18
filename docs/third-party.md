@@ -26,6 +26,33 @@ The source is a hosts file. Only its `0.0.0.0 <hostname>` rows were copied;
 comment, blank, and non-host rows were dropped. The domain names are facts; the
 compilation is MIT-licensed. No code from the project is bundled.
 
+## CleanBrowsing Family DNS
+
+The web filter resolves allowed names through CleanBrowsing's free Family
+filter. The app ships no CleanBrowsing code, SDK, or certificate: it speaks
+standard DNS over TLS (RFC 7858) to the published endpoints.
+
+| Field | Value |
+| --- | --- |
+| Service | CleanBrowsing free Family Filter |
+| Setup reference | https://cleanbrowsing.org/setup and https://cleanbrowsing.org/filters |
+| DoT hostname | `family-filter-dns.cleanbrowsing.org`, port 853 |
+| IPv4 | `185.228.168.168`, `185.228.169.168` |
+| IPv6 | `2a0d:2a00:1::`, `2a0d:2a00:2::` |
+| Account | none; the free tier needs no signup, dashboard, or key |
+| Cost | free |
+| Terms | https://cleanbrowsing.org/terms, https://cleanbrowsing.org/privacy |
+
+What leaves the phone: the domain names the phone resolves, sent over TLS to
+CleanBrowsing. What does not: page content, IP addresses of the phone, and any
+Guardian account. Guardian stores no query log either way. The free Family
+filter also blocks VPN and proxy domains, blocks mixed-content sites, and
+forces SafeSearch; it cannot accept the parent's custom domains.
+
+The endpoints above are pinned in `DotClient`. If CleanBrowsing changes them,
+the app reports "CleanBrowsing is not reachable" instead of switching to another
+resolver, and the next build updates this table.
+
 ## Libraries
 
 The app uses AndroidX, Compose, Navigation, DataStore, and JUnit through the

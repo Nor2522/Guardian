@@ -18,11 +18,39 @@ pages, or hide the phone's address.
 - `addDisallowedApplication(packageName)` keeps Guardian's own upstream
   sockets out of its tunnel.
 - The service runs as a foreground service with type `specialUse` and the
-  manifest property "Local DNS filter for parental controls. Checks domain
-  names on this phone; does not send browsing data anywhere." `FOREGROUND_SERVICE`,
+  manifest property "Local DNS filter for parental controls. Blocks sites on
+  this phone and resolves other names through CleanBrowsing's public Family
+  filter. No browsing history is kept." `FOREGROUND_SERVICE`,
   `FOREGROUND_SERVICE_SPECIAL_USE`, and `INTERNET` are declared. `INTERNET` is
-  needed on every API level, including 26 to 28, because the forwarder opens
-  UDP sockets to the network resolver.
+  needed on every API level, including 26 to 28, because the forwarder opens a
+  TLS connection to CleanBrowsing.
+
+## Upstream: CleanBrowsing Family
+
+The parent's single "Filter websites" switch is also the CleanBrowsing switch.
+There is no second control and no DNS setup step.
+
+- Resolver: CleanBrowsing's free Family filter, DNS over TLS (RFC 7858) on port
+  853 to `family-filter-dns.cleanbrowsing.org` (`185.228.168.168`,
+  `185.228.169.168`, `2a0d:2a00:1::`, `2a0d:2a00:2::`). No account, no dashboard,
+  no custom lists on the free tier.
+- Transport: TLS with SNI and hostname verification against the resolver's
+  certificate. One connection is reused; a failed exchange is retried once from
+  a fresh socket, then the query answers SERVFAIL.
+- No fallback to the phone's resolver. Falling back would keep the parent's
+  switch green while nothing is being filtered, which is the one failure this
+  design refuses. A blocked network therefore breaks name resolution instead of
+  quietly unfiltering the phone, and the Web tab says so.
+- The built-in adult list and the parent's custom domains are still answered
+  locally, before any network step, so they keep working with CleanBrowsing down.
+- Reachability: a probe query runs when the tunnel starts and when the Web tab
+  is shown. Its result drives the "CleanBrowsing is not reachable" card.
+- Privacy: CleanBrowsing sees the domain names the phone resolves. Guardian
+  stores no query log, and no browsing data goes to a Guardian server. The free
+  Family filter also blocks VPN and proxy domains, blocks mixed-content sites
+  such as Reddit, and forces SafeSearch on Google, Bing, and YouTube.
+- Custom domains stay as a local layer. They are not sent to CleanBrowsing, and
+  the free tier could not accept them anyway.
 
 ## Packet path
 
@@ -33,11 +61,11 @@ pages, or hide the phone's address.
 3. If the name matches the shipped adult list or a custom domain, the service
    writes back an NXDOMAIN reply from the same address and port. The app sees
    a normal "name does not exist" answer and shows its own error page.
-4. Otherwise the service forwards the query to the network resolver from
-   `ConnectivityManager.getLinkProperties(activeNetwork).dnsServers`, skipping
-   the tunnel's own addresses. The socket is `protect()`ed so it leaves through
-   the real network. Timeout 4 seconds, then SERVFAIL so the app fails rather
-   than hangs.
+4. Otherwise the query is sent to CleanBrowsing over DNS over TLS. The socket
+   connects to the resolver address directly, so no name lookup is needed to
+   start filtering, and it leaves through the physical network because the
+   tunnel routes only the two DNS addresses. Timeout 4 seconds, then SERVFAIL
+   so the app fails rather than hangs.
 5. The reply is wrapped in a fresh IPv4 or IPv6 header with the client's
    address and port, with correct header and UDP checksums, and written back
    to the tunnel.
@@ -54,7 +82,10 @@ fixed-offset work.
   log, no browsing history, and no per-site counters.
 - A DNS reply larger than the tunnel MTU of 1500 is dropped; the client retries
   and the normal path still applies.
-- Upstream answers are not cached.
+- Upstream answers are not cached. Every allowed lookup is a fresh DoT exchange,
+  so an answer is never older than what CleanBrowsing returned. Apps and
+  browsers cache their own repeats; a local cache would need TTL parsing and
+  could serve a stale address after a resolver change.
 
 ## Another VPN
 
@@ -96,6 +127,12 @@ both limits.
   guard. Guardian cannot password-lock that system control.
 - With Accessibility off, the VPN settings guard is not active. The OS still
   shows the weaker state on the status screen.
+- A network that blocks or breaks port 853 stops name resolution while the
+  filter is on. That is deliberate: falling back to the phone's resolver would
+  remove the filter without telling the parent.
+- CleanBrowsing over-blocks by design in Family mode (VPN and proxy domains,
+  mixed-content sites such as Reddit). The parent cannot tune that on the free
+  tier; turning the filter off is the only switch.
 - Play and the app copy must say "does not promise perfect blocking".
 
 ## Failure states
@@ -105,5 +142,5 @@ both limits.
 | Filter off by parent | stored switch | off card, limits keep working |
 | VPN revoked or stopped | service destroyed, `prepare()` non-null | problem card, Fix filter |
 | Another VPN active | VPN network not ours | problem card, Open VPN settings |
-| No DNS server on the network | empty link properties | SERVFAIL answers, problem note |
+| CleanBrowsing unreachable (no network, port 853 blocked, certificate failure) | DoT connect, handshake, or read failure, probe failure | SERVFAIL answers and the Web tab replaces the green card with "CleanBrowsing is not reachable" |
 | Service killed by the system | foreground notification gone | status re-checks on resume |

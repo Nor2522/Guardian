@@ -419,7 +419,7 @@ Step 2, privacy:
 - Title "What Guardian can see"
 - Three short blocks with icons.
 - "It can see which app is open and for how long."
-- "It can check website domain names on this phone when the filter is on. Allowed lookups go to your network's DNS resolver, not to Guardian."
+- "It can check website domain names when the filter is on. Blocked names are answered on this phone. Every other lookup goes over encrypted DNS to CleanBrowsing's free Family filter, never to a Guardian server."
 - "It cannot read messages, photos, passwords, or what you type. It does not use the microphone or camera."
 - A link "Read the privacy policy" opens the privacy page. Until the public URL exists at Step 11, it opens the in-app summary. Never ship a dead link.
 - Primary "I understand"
@@ -463,7 +463,7 @@ Draft disclosure copy:
 | Usage access | "Guardian reads how long apps are in the foreground so it can show screen time and enforce daily limits. It does not read what you do inside apps. Android opens a settings screen where you grant this access." |
 | Notifications | "Android requires a visible notice while Guardian protects the phone. The notice shows whether protection is on and opens the status screen. It does not show app names or personal data." |
 | Accessibility | "Guardian uses Accessibility to notice which app is open. When a limit or schedule applies, Guardian shows a pause screen instead. Guardian does not read text on the screen, watch taps, type for you, or control other apps. You can turn this off at any time in Android Settings." |
-| VPN filter | "Guardian uses a local VPN to check website domain names against its block list. The check happens on this phone. Guardian does not send your browsing to a Guardian server. Allowed domain lookups go to your network's DNS resolver. Guardian does not inspect page content and does not hide your IP address. Android shows a VPN key while the filter runs." |
+| VPN filter | "Guardian uses a local VPN to check website domain names. Names on the block list are answered on this phone. Every other lookup goes over encrypted DNS to CleanBrowsing's free Family filter, which blocks adult, VPN, and proxy sites. Guardian does not send your browsing to a Guardian server and keeps no history. Guardian does not inspect page content and does not hide your IP address. Android shows a VPN key while the filter runs." |
 | Device Admin | "Guardian uses Device Admin so the app cannot be uninstalled without your PIN. It does not wipe the phone, lock the screen, or change your password. You can remove Guardian later with your PIN." |
 
 Consent text under each checkbox. "I understand what this permission does and I want to turn it on." The consent timestamp is stored in DataStore. Do not reuse one consent for another permission.
@@ -571,13 +571,13 @@ Top app bar "Web" with settings.
 
 Layout:
 
-1. Status card. Healthy state uses `successContainer` with a shield icon, "Website filter is on", and body "Adult sites and your blocked sites are filtered on this phone." If the parent turned the filter off, use `surfaceContainerLow` with an info icon, "Website filter is off", and body "Adult sites and your blocked sites can load. App limits and schedules keep working." If a permission was revoked or the VPN stopped, use `warningContainer` and the problem copy. If another VPN is active, show that problem instead of a false "on" state.
-2. Filter switch row. Label "Filter websites", supporting text "Uses a local DNS check. Turning it off asks for your parent PIN." The switch is `primary`. Turning it off opens the PIN confirmation screen; the switch stays on until the PIN is accepted.
+1. Status card. Healthy state uses `successContainer` with a shield icon, "Website filter is on", and body "CleanBrowsing Family filters this phone, plus your blocked sites and Guardian's adult list." If the parent turned the filter off, use `surfaceContainerLow` with an info icon, "Website filter is off", and body "Adult sites and your blocked sites can load. App limits and schedules keep working." If a permission was revoked or the VPN stopped, use `warningContainer` and the problem copy. If another VPN is active, show that problem instead of a false "on" state. If the tunnel is up but CleanBrowsing cannot be reached, replace the green card with "CleanBrowsing is not reachable" and body "The filter cannot reach CleanBrowsing, so websites will not load. This keeps the filter on instead of switching to unfiltered DNS. Check the connection, then open this tab again. If it still cannot connect, turn the filter off." No action button, no second control.
+2. Filter switch row. Label "Filter websites", supporting text "Filters through CleanBrowsing's free Family DNS. Turning it off asks for your parent PIN." The switch is `primary`. Turning it off opens the PIN confirmation screen; the switch stays on until the PIN is accepted. This switch is the only filter control: it starts the tunnel, the CleanBrowsing upstream, and the local list together.
 3. Custom sites section. Title "Blocked sites" and a count. Rows show the domain in `bodyLarge`, with a remove icon button that has the content description "Remove example.com". Remove asks for confirmation. Empty state "No custom sites. Guardian blocks its adult site list."
 4. Add site. A full width outlined button "Add a site" opens a small screen with a text field, helper "Enter a domain like example.com. Subdomains are included. Do not include https:// or a path.", and Save. Inline errors for an invalid or duplicate domain. Normalize to lowercase ASCII and strip a leading `www.` only if the stored list expects it. Show the normalized value before saving.
-5. Adult site list info. "Adult site list, version 2026.11.15, 64,307 domains." The version and count come from the asset metadata. A "How filtering works" text button opens a sheet.
+5. Adult site list info. "Adult site list, version 2026.11.15, 64,307 domains." The version and count come from the asset metadata. A "How filtering works" text button opens a sheet that explains the two layers: names on the local list are answered on the phone, everything else is resolved through CleanBrowsing's free Family filter over encrypted DNS, and a CleanBrowsing outage fails lookups instead of falling back to unfiltered DNS.
 6. Limits explainer. Keep the key caveat visible, not behind an expander. A `surfaceContainerLow` card with the title "What the filter cannot do" and body "Some apps and browsers use their own DNS or a direct connection and can bypass the filter. Android's Quick Settings VPN switch cannot be PIN-locked, and the VPN settings guard needs Accessibility. Guardian does not inspect HTTPS traffic or keep browsing history, and cannot promise perfect blocking."
-7. Problem states. VPN off, another VPN active, or no network. The status card is replaced by the matching `ProblemCard` with one action.
+7. Problem states. VPN off, another VPN active, no network, or CleanBrowsing unreachable. The status card is replaced by the matching `ProblemCard`. The first three carry one action; the CleanBrowsing state carries none, because the only fix is the connection or turning the filter off.
 
 Turning the filter off:
 
@@ -591,6 +591,7 @@ Domain rules:
 - A stored domain blocks that domain and its subdomains. Enter `example.com` to block all of it, or `ads.example.com` to block only that subdomain. Say this in the helper text.
 - Store punycode for international domains. Display the Unicode form when available.
 - The shipped adult list is read only. The parent cannot edit or delete it. A custom domain that duplicates the shipped list is allowed but shown as "Already on the adult list." Do not create a duplicate row. The maintained list is the default protection; the parent does not need to add a domain for it to work.
+- CleanBrowsing Family is not editable and never receives the parent's custom domains. It covers the sites the local list misses, blocks VPN and proxy domains, and forces SafeSearch. Say "CleanBrowsing" in the copy so the parent knows a third-party resolver sees domain names.
 
 ### 9. Settings
 
@@ -616,7 +617,7 @@ Privacy:
 
 - "Privacy policy" opens the public page when it exists, otherwise the in-app summary. Never a dead link.
 - "What Guardian can see" opens the in-app privacy summary from onboarding.
-- "Data on this phone" explains that limits, schedules, domains, usage, and the PIN hash stay on the device, and that clearing app data deletes them. It also says that allowed DNS lookups go to the network resolver when the filter is on. No export in version 1.
+- "Data on this phone" explains that limits, schedules, domains, usage, and the PIN hash stay on the device, and that clearing app data deletes them. It also says that allowed DNS lookups go to CleanBrowsing's free Family filter when the filter is on. No export in version 1.
 
 About:
 
