@@ -1,5 +1,8 @@
 package com.nordev.guardian.service.dns
 
+import java.io.ByteArrayOutputStream
+import kotlin.random.Random
+
 // Parses the question of a DNS query and builds the small set of replies the
 // filter needs. Queries never use name compression, replies reuse the query
 // bytes so the question section stays intact.
@@ -11,6 +14,29 @@ data class DnsQuestion(
 
 object DnsMessage {
     private const val HEADER = 12
+
+    // Only the reachability probe needs a query built from scratch; every other
+    // packet is a client query passed through unchanged.
+    fun query(name: String, type: Int = 1, id: Int = Random.nextInt(0x10000)): ByteArray {
+        val out = ByteArrayOutputStream()
+        val header = ByteArray(HEADER)
+        header[0] = (id ushr 8).toByte()
+        header[1] = id.toByte()
+        header[2] = 0x01
+        header[5] = 0x01
+        out.write(header)
+        name.split('.').forEach { label ->
+            val bytes = label.toByteArray(Charsets.US_ASCII)
+            out.write(bytes.size)
+            out.write(bytes)
+        }
+        out.write(0)
+        out.write(0)
+        out.write(type)
+        out.write(0)
+        out.write(1)
+        return out.toByteArray()
+    }
 
     fun parseQuestion(payload: ByteArray, length: Int = payload.size): DnsQuestion? {
         if (length < HEADER) return null

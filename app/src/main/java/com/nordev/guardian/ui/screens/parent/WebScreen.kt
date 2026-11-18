@@ -35,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -52,6 +53,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.nordev.guardian.R
+import com.nordev.guardian.data.web.UpstreamHealth
 import com.nordev.guardian.data.web.WebFilterStatus
 import com.nordev.guardian.data.web.WebFilterStatusReader
 import com.nordev.guardian.domain.web.DomainName
@@ -90,15 +92,26 @@ fun WebScreen(
     val reader = remember(context) { WebFilterStatusReader(context) }
     val lifecycleOwner = LocalLifecycleOwner.current
     var status by remember { mutableStateOf(WebFilterStatus.Off) }
+    var upstream by remember { mutableStateOf(UpstreamHealth.state) }
+    var resumeTick by remember { mutableIntStateOf(0) }
     var pendingRemoval by rememberSaveable { mutableStateOf<String?>(null) }
     var showHowItWorks by rememberSaveable { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner, policy.enabled) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) status = reader.read(policy.enabled)
+            if (event == Lifecycle.Event.ON_RESUME) {
+                status = reader.read(policy.enabled)
+                resumeTick += 1
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // A green tunnel is not proof the filter works: CleanBrowsing has to answer.
+    // The probe runs when the tab is shown and again after every resume.
+    LaunchedEffect(status, resumeTick) {
+        if (status == WebFilterStatus.On) upstream = UpstreamHealth.probe()
     }
 
     LaunchedEffect(policy.enabled) {
@@ -127,6 +140,7 @@ fun WebScreen(
             Spacer(Modifier.height(8.dp))
             WebStatusCard(
                 status = status,
+                upstream = upstream,
                 onTurnOnFilter = onTurnOnFilter,
                 onOpenVpnSettings = onOpenVpnSettings,
                 onOpenNetworkSettings = onOpenNetworkSettings,
@@ -233,12 +247,21 @@ fun WebScreen(
 @Composable
 private fun WebStatusCard(
     status: WebFilterStatus,
+    upstream: UpstreamHealth.State,
     onTurnOnFilter: () -> Unit,
     onOpenVpnSettings: () -> Unit,
     onOpenNetworkSettings: () -> Unit,
 ) {
     when (status) {
-        WebFilterStatus.On -> OnStatusCard()
+        WebFilterStatus.On -> if (upstream == UpstreamHealth.State.Unreachable) {
+            ProblemCard(
+                severity = ProblemSeverity.Blocking,
+                title = stringResource(R.string.web_status_upstream_title),
+                body = stringResource(R.string.web_status_upstream_body),
+            )
+        } else {
+            OnStatusCard()
+        }
         WebFilterStatus.Off -> ProblemCard(
             severity = ProblemSeverity.Informational,
             title = stringResource(R.string.web_filter_off_title),

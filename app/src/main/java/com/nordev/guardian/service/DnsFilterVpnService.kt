@@ -6,20 +6,19 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
-import android.os.SystemClock
 import android.util.Log
 import com.nordev.guardian.BuildConfig
 import com.nordev.guardian.MainActivity
 import com.nordev.guardian.R
 import com.nordev.guardian.data.prefs.PolicyRepository
 import com.nordev.guardian.data.web.BlocklistRepository
+import com.nordev.guardian.data.web.UpstreamHealth
 import com.nordev.guardian.domain.web.DomainMatcher
 import com.nordev.guardian.service.dns.DnsMessage
 import com.nordev.guardian.service.dns.DnsQuestion
+import com.nordev.guardian.service.dns.DotClient
 import com.nordev.guardian.service.dns.IpPacket
 import com.nordev.guardian.service.dns.UdpPacket
 import kotlinx.coroutines.CoroutineScope
@@ -30,35 +29,27 @@ import kotlinx.coroutines.launch
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.Inet6Address
-import java.net.InetAddress
-import java.net.SocketTimeoutException
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 
 // A DNS-only tunnel. Apps ask the tunnel address for names; blocked names get
-// NXDOMAIN locally, everything else is forwarded to the phone's real resolver
-// and the answer is wrapped back into the tunnel. No page content is read and no
+// NXDOMAIN locally, everything else is resolved through CleanBrowsing's free
+// Family filter over DNS over TLS. There is no second upstream: if CleanBrowsing
+// cannot be reached the query fails, because falling back to the phone's
+// resolver would silently remove the filter. No page content is read and no
 // query is stored.
 class DnsFilterVpnService : VpnService() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val forwarder = Executors.newFixedThreadPool(FORWARD_THREADS)
     private val writeLock = Any()
+    private val dot = DotClient()
 
     @Volatile
     private var adultMatcher = DomainMatcher(emptySet())
 
     @Volatile
     private var customMatcher = DomainMatcher(emptySet())
-
-    @Volatile
-    private var upstream: List<InetAddress> = emptyList()
-
-    @Volatile
-    private var upstreamAt = 0L
 
     private var tunnel: ParcelFileDescriptor? = null
     private var output: FileOutputStream? = null
@@ -107,6 +98,9 @@ class DnsFilterVpnService : VpnService() {
             running = true
             reader = Thread({ readLoop(descriptor) }, "guardian-dns-reader").apply { start() }
             if (BuildConfig.DEBUG) Log.d(TAG, "filter up")
+            // Probe once at start so the Web tab can report an unreachable
+            // filter before the first app query fails.
+            scope.launch { UpstreamHealth.probe() }
             // The switch may have turned off while the tunnel was being set up.
             if (!policyEnabled) {
                 stopFilter()
@@ -142,6 +136,7 @@ class DnsFilterVpnService : VpnService() {
 
     override fun onDestroy() {
         closeTunnel()
+        dot.close()
         forwarder.shutdownNow()
         scope.cancel()
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -149,9 +144,6 @@ class DnsFilterVpnService : VpnService() {
     }
 
     private fun establishTunnel(): ParcelFileDescriptor? {
-        // Resolve the real resolver before the tunnel exists, otherwise the
-        // active network is our own tunnel and the address would loop.
-        refreshUpstream()
         val builder = Builder()
             .setSession(getString(R.string.filter_session_name))
             .setMtu(TUNNEL_MTU)
@@ -198,85 +190,16 @@ class DnsFilterVpnService : VpnService() {
     }
 
     private fun forward(packet: UdpPacket, question: DnsQuestion) {
-        val target = upstreamFor(packet.ipv6)
-        if (target == null) {
+        val reply = dot.query(packet.payload)
+        if (reply == null) {
+            UpstreamHealth.markUnreachable()
+            if (BuildConfig.DEBUG) Log.d(TAG, "cleanbrowsing unreachable")
             writeResponse(packet, DnsMessage.servFail(packet.payload, question.endOffset))
             return
         }
-        val socket = DatagramSocket()
-        try {
-            if (!protect(socket)) {
-                writeResponse(packet, DnsMessage.servFail(packet.payload, question.endOffset))
-                return
-            }
-            socket.soTimeout = UPSTREAM_TIMEOUT_MS
-            socket.connect(target, DNS_PORT)
-            val query = packet.payload
-            socket.send(DatagramPacket(query, query.size))
-            val buffer = ByteArray(MAX_DNS_RESPONSE)
-            val reply = DatagramPacket(buffer, buffer.size)
-            socket.receive(reply)
-            val answer = reply.data.copyOfRange(reply.offset, reply.offset + reply.length)
-            if (answer.size < DNS_HEADER || answer[0] != query[0] || answer[1] != query[1]) {
-                writeResponse(packet, DnsMessage.servFail(packet.payload, question.endOffset))
-                return
-            }
-            writeResponse(packet, answer)
-        } catch (_: SocketTimeoutException) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "upstream timeout")
-            upstreamAt = 0L
-            writeResponse(packet, DnsMessage.servFail(packet.payload, question.endOffset))
-        } catch (_: IOException) {
-            upstreamAt = 0L
-            writeResponse(packet, DnsMessage.servFail(packet.payload, question.endOffset))
-        } finally {
-            socket.close()
-        }
+        UpstreamHealth.markConnected()
+        writeResponse(packet, reply)
     }
-
-    private fun upstreamFor(ipv6: Boolean): InetAddress? {
-        if (upstream.isEmpty() || SystemClock.elapsedRealtime() - upstreamAt > UPSTREAM_REFRESH_MS) {
-            refreshUpstream()
-        }
-        val current = upstream
-        return current.firstOrNull { (it is Inet6Address) == ipv6 } ?: current.firstOrNull()
-    }
-
-    // getAllNetworks is deprecated in API 37 but remains the only synchronous
-    // way to enumerate every active tunnel in one pass.
-    @Suppress("DEPRECATION")
-    private fun refreshUpstream() {
-        val manager = getSystemService(ConnectivityManager::class.java) ?: return
-        val found = linkedSetOf<InetAddress>()
-        manager.allNetworks
-            .mapNotNull { network ->
-                val caps = manager.getNetworkCapabilities(network) ?: return@mapNotNull null
-                if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) return@mapNotNull null
-                if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) return@mapNotNull null
-                val validated = if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) 1 else 0
-                network to validated
-            }
-            .sortedByDescending { it.second }
-            .forEach { (network, _) ->
-                val link = manager.getLinkProperties(network) ?: return@forEach
-                link.dnsServers.forEach { address ->
-                    if (isUsableDns(address)) found += address
-                }
-            }
-        upstream = found.toList()
-        upstreamAt = SystemClock.elapsedRealtime()
-        if (BuildConfig.DEBUG) Log.d(TAG, "upstream ${upstream.size} server(s)")
-    }
-
-    private fun isUsableDns(address: InetAddress): Boolean =
-        !address.isAnyLocalAddress &&
-            !address.isLoopbackAddress &&
-            !address.isMulticastAddress &&
-            !address.isLinkLocalAddress &&
-            !isOwnAddress(address)
-
-    private fun isOwnAddress(address: InetAddress): Boolean =
-        OWN_ADDRESSES.any { it.contentEquals(address.address) }
 
     private fun isTunnelDnsAddress(address: ByteArray): Boolean =
         address.contentEquals(DNS_V4_BYTES) || address.contentEquals(DNS_V6_BYTES)
@@ -333,12 +256,8 @@ class DnsFilterVpnService : VpnService() {
         private const val TUNNEL_MTU = 1500
         private const val IPV6_HEADER = 40
         private const val UDP_HEADER = 8
-        private const val DNS_HEADER = 12
         private const val MAX_PACKET = 32767
-        private const val MAX_DNS_RESPONSE = 4096
         private const val FORWARD_THREADS = 4
-        private const val UPSTREAM_TIMEOUT_MS = 4_000
-        private const val UPSTREAM_REFRESH_MS = 60_000L
         internal const val ADDRESS_V4 = "10.111.222.1"
         private const val DNS_V4 = "10.111.222.2"
         internal const val ADDRESS_V6 = "fd00:1111:2222::1"
@@ -350,15 +269,6 @@ class DnsFilterVpnService : VpnService() {
         private val DNS_V6_BYTES = byteArrayOf(
             0xfd.toByte(), 0x00, 0x11, 0x11, 0x22, 0x22, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-        )
-        private val OWN_ADDRESSES = listOf(
-            byteArrayOf(10, 111, 222.toByte(), 1),
-            DNS_V4_BYTES,
-            byteArrayOf(
-                0xfd.toByte(), 0x00, 0x11, 0x11, 0x22, 0x22, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-            ),
-            DNS_V6_BYTES,
         )
 
         @Volatile
