@@ -88,6 +88,23 @@ brush at the call site.
 - `design.md` font weights (400/500), no all-caps rule, and no-shadow rule still
   apply. The pause screen remains the only place a shadow would be allowed, and
   the current build uses none.
+- Focus is delegated to Material 3: `GuardianPrimaryButton` draws the gradient
+  under a transparent Material button so the press, focus ring, and enabled
+  semantics come from Material, and design-system rows use Material `clickable`.
+  The design-system layer adds no custom focus implementation.
+
+## Motion
+
+`GuardianMotion` is the design-system token source for animation timing; screens
+read `GuardianMotion.quickMillis`, `standardMillis`, and `slowMillis` instead of
+hardcoding durations. design.md maps the 200 ms transition, 150 ms pause fade, and
+300 ms progress animation onto those tokens.
+
+## Typography
+
+`guardianTypography()` maps the design.md token table onto Material 3's
+`Typography` object: display/headline/body/label sizes and line heights, weights
+400/500 only, and tabular figures (`tnum`) for durations and times.
 
 ## Verifying a change
 
