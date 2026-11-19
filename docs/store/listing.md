@@ -72,17 +72,25 @@ Privacy policy: https://nor2522.github.io/Guardian/site/
 - Contact email: `[CONTACT EMAIL]`
 - Website: https://nor2522.github.io/Guardian/site/
 
-## Graphics needed
+## Graphics
 
-| Asset | Spec | Status |
+| Asset | Spec | File |
 | --- | --- | --- |
-| App icon | 512 × 512 PNG, 32-bit | to produce from the launcher icon |
-| Feature graphic | 1024 × 500 PNG | to produce |
-| Phone screenshots | 2 to 8, 16:9 or 9:16, min 320 px | to capture from the SM-A155F: Status, Today, Limits, Schedules, Web, pause screen |
+| App icon | 512 × 512 PNG, 32-bit | `graphics/icon-512.png` |
+| Feature graphic | 1024 × 500 PNG | `graphics/feature-graphic-1024x500.png` |
+| Phone screenshots | 2 to 8, max 2:1, min 320 px | `graphics/screenshots/`, six files at 1080 × 2140 |
 | Tablet screenshots | optional | skip, phone-only app |
 
-Screenshots must come from the installed release build, not the debug one, and
-must not show a child's name or real usage. Use a test profile.
+`graphics/README.md` records how each file was made. The icon is the launcher
+art with the adaptive background filled in, so it matches the icon on the phone.
+
+Screenshots came from the 1.0.0 debug build on the SM-A155F, which is what Nor
+keeps installed: swapping to the release build would delete the configured PIN,
+limits, and filter. The debug build differs only in log lines. Cropping the top
+130 px and bottom 70 px drops the status bar and satisfies Play's 2:1 rule.
+
+The Today screens were captured with sample data: four invented apps and 42
+minutes today. No real app name or real usage appears in any screenshot.
 
 ## App content answers
 
