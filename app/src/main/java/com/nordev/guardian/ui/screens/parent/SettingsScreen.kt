@@ -40,6 +40,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.nordev.guardian.BuildConfig
 import com.nordev.guardian.R
 import com.nordev.guardian.ui.components.GuardianCard
 import com.nordev.guardian.ui.components.GuardianTopBar
@@ -188,7 +189,7 @@ fun SettingsScreen(
                     )
                     Spacer(Modifier.width(GuardianSpacing.sm))
                     Text(
-                        text = stringResource(R.string.settings_version_value),
+                        text = BuildConfig.VERSION_NAME,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

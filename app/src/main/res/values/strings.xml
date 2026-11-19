@@ -315,7 +315,6 @@
     <string name="settings_data_reinstall">Uninstalling Guardian or clearing app data deletes the PIN and every rule. There is no cloud backup and no PIN reset in this version.</string>
     <string name="settings_section_about">About</string>
     <string name="settings_version">Version</string>
-    <string name="settings_version_value">0.1.0</string>
     <string name="settings_remove_title">Remove Guardian</string>
     <string name="settings_remove_body">Turn off protection and uninstall. Requires your PIN.</string>
 
