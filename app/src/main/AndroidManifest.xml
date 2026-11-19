@@ -37,6 +37,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Guardian">
 
+        <!-- Play's Malware policy requires every version code of a parental
+             monitoring app to declare itself, so the review team and Play
+             Protect can label it correctly instead of guessing. -->
+        <meta-data
+            android:name="isMonitoringTool"
+            android:value="child_monitoring" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
