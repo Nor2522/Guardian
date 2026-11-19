@@ -23,11 +23,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.nordev.guardian.R
+import com.nordev.guardian.ui.openPrivacyPolicy
 
 @Composable
 fun PrivacyScreen(
@@ -35,6 +37,7 @@ fun PrivacyScreen(
     onIUnderstand: () -> Unit,
 ) {
     var showSummary by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
     OnboardingShell(
         stepNumber = 2,
         onBack = onBack,
@@ -51,9 +54,13 @@ fun PrivacyScreen(
         PrivacyBlock(Icons.Outlined.Public, stringResource(R.string.onboarding_privacy_p2))
         PrivacyBlock(Icons.Outlined.Shield, stringResource(R.string.onboarding_privacy_p3))
         Spacer(Modifier.height(8.dp))
-        // The public privacy URL ships at Step 11; until then the link opens the
-        // in-app summary so no link is ever dead.
-        TextButton(onClick = { showSummary = true }) {
+        // A real browser opens the hosted policy; a phone without one still
+        // gets the summary instead of a dead link.
+        TextButton(
+            onClick = {
+                if (!openPrivacyPolicy(context)) showSummary = true
+            },
+        ) {
             Text(text = stringResource(R.string.onboarding_read_policy))
         }
     }

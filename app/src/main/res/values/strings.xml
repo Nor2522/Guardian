@@ -80,6 +80,8 @@
     <string name="onboarding_privacy_i_understand">I understand</string>
     <string name="privacy_summary_title">Privacy in brief</string>
     <string name="privacy_summary_body">Guardian runs only on this phone. App usage, limits, schedules, blocked sites, and the PIN hash are stored on the device. Guardian has no account, no server, and no ads. It never reads messages, photos, passwords, or what you type. When the filter is on, blocked website names are answered on the phone and every other lookup goes over encrypted DNS to CleanBrowsing\'s free Family filter. Guardian keeps no browsing history.</string>
+    <!-- Hosted copy of docs/store/privacy-policy.md. Play checks that it loads. -->
+    <string name="privacy_policy_url" translatable="false">https://nor2522.github.io/Guardian/site/</string>
 
     <!-- Step 3 PIN -->
     <string name="onboarding_pin_title">Create a parent PIN</string>

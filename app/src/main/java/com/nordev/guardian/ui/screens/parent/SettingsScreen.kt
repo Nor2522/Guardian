@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -45,6 +46,7 @@ import com.nordev.guardian.ui.components.GuardianTopBar
 import com.nordev.guardian.ui.components.IconBadge
 import com.nordev.guardian.ui.components.SectionHeader
 import com.nordev.guardian.ui.nav.ThemeMode
+import com.nordev.guardian.ui.openPrivacyPolicy
 import com.nordev.guardian.ui.theme.GuardianSizes
 import com.nordev.guardian.ui.theme.GuardianSpacing
 
@@ -58,6 +60,7 @@ fun SettingsScreen(
     onOpenRemoval: () -> Unit,
 ) {
     var showPrivacySummary by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
     Scaffold(
         containerColor = Color.Transparent,
         topBar = { GuardianTopBar(title = stringResource(R.string.settings_title), onBack = onBack) },
@@ -90,7 +93,9 @@ fun SettingsScreen(
                 SettingRow(
                     icon = Icons.Outlined.Lock,
                     title = stringResource(R.string.settings_privacy),
-                    onClick = { showPrivacySummary = true },
+                    onClick = {
+                        if (!openPrivacyPolicy(context)) showPrivacySummary = true
+                    },
                 )
             }
             Spacer(Modifier.height(GuardianSpacing.xl))
