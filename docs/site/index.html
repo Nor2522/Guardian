@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardian privacy policy</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --text: #1a1c1e;
+    --muted: #44474b;
+    --bg: #fdfcff;
+    --rule: #d9dce1;
+    --accent: #1f5f4b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --text: #e4e2e6;
+      --muted: #c3c7cb;
+      --bg: #121316;
+      --rule: #33363b;
+      --accent: #7fd6b6;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  main { max-width: 68ch; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 1.25rem; margin: 40px 0 8px; }
+  p, li { color: var(--text); }
+  .meta { color: var(--muted); font-size: 0.95rem; margin: 0 0 32px; }
+  .lede { font-size: 1.05rem; }
+  ul { padding-left: 1.2em; }
+  li { margin: 6px 0; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  hr { border: 0; border-top: 1px solid var(--rule); margin: 40px 0; }
+  footer { color: var(--muted); font-size: 0.95rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Guardian privacy policy</h1>
+  <p class="meta">Effective 19 November 2026</p>
+
+  <p class="lede">Guardian is a parental-control app for one phone. It runs
+  entirely on that phone. There is no Guardian account, no Guardian server, and
+  no Guardian analytics.</p>
+
+  <h2>What stays on the phone</h2>
+  <ul>
+    <li>Which app is open and for how long, kept as a local usage ledger.</li>
+    <li>App limits, schedules, and the website filter switch.</li>
+    <li>Blocked website domains.</li>
+    <li>The parent PIN, stored only as a salted PBKDF2 hash. The PIN itself is
+      never stored and never leaves the phone.</li>
+    <li>App settings and onboarding choices.</li>
+  </ul>
+  <p>Uninstalling Guardian, or clearing its data, deletes all of it. Because
+  there is no account, there is nothing to delete on a server.</p>
+
+  <h2>What leaves the phone</h2>
+  <p>When the website filter is on, and only then, the phone sends the domain
+  names it looks up over encrypted DNS (DNS over TLS, port 853) to
+  CleanBrowsing&rsquo;s free Family filter. This is how the filter works: blocked
+  names are answered on the phone, and every other name has to be resolved by a
+  resolver. CleanBrowsing is a third-party service with its own privacy policy
+  at <a href="https://cleanbrowsing.org/privacy">cleanbrowsing.org/privacy</a>.
+  Guardian does not send page content, the contents of messages or photos,
+  keystrokes, or any identifier for you or the phone. Guardian keeps no browsing
+  history and no query log, and writes no domain names to disk.</p>
+  <p>If the filter is off, Guardian sends nothing.</p>
+
+  <h2>What Guardian cannot see</h2>
+  <p>Guardian does not read messages, photos, files, passwords, or what is typed.
+  It does not use the microphone, the camera, or location. It does not collect
+  contacts, calendars, or health data. It has no advertising SDK and no crash or
+  analytics SDK.</p>
+
+  <h2>Permissions and why each exists</h2>
+  <ul>
+    <li><strong>Usage access.</strong> Reads how long each app was in the
+      foreground so daily limits and screen-time totals work. The data stays in
+      the app&rsquo;s private storage.</li>
+    <li><strong>Accessibility.</strong> Detects which app is in the foreground so
+      limits, schedules, and the pause screen can react, and watches for the
+      system VPN and Device Admin screens so the parent PIN gates them. It does
+      not read screen text, capture the screen, or perform gestures.</li>
+    <li><strong>VPN (VpnService).</strong> Runs the local DNS filter. The tunnel
+      carries only the two DNS addresses on this phone. Guardian does not route
+      or inspect other traffic and does not use a remote VPN server.</li>
+    <li><strong>Device admin.</strong> Makes removing Guardian require the parent
+      PIN.</li>
+    <li><strong>Notifications.</strong> Shows the ongoing &ldquo;Guardian is
+      on&rdquo; notice, which is the visible proof that protection is
+      running.</li>
+    <li><strong>Run at startup.</strong> Restores the filter after a reboot or an
+      app update while the parent&rsquo;s switch is still on.</li>
+  </ul>
+
+  <h2>Children&rsquo;s privacy</h2>
+  <p>Guardian is set up and controlled by a parent or guardian. It collects no
+  personal data from the child and sends none to the developer. The only data
+  leaving the phone is the domain-name lookup described above, which any DNS
+  resolver would receive.</p>
+
+  <h2>Changes</h2>
+  <p>If a future version changes what leaves the phone, this page is updated
+  before that version ships and the in-app text is updated with it.</p>
+
+  <hr>
+  <footer>
+    <p>Questions about this policy:
+    <a href="mailto:[CONTACT EMAIL]">[CONTACT EMAIL]</a></p>
+  </footer>
+</main>
+</body>
+</html>
