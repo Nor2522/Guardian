@@ -44,6 +44,8 @@ fun TodayScreen(
     usage: UsageSnapshot?,
     onOpenSettings: () -> Unit,
     onOpenUsageSettings: () -> Unit,
+    notificationsVisible: Boolean,
+    onOpenNotificationSettings: () -> Unit,
 ) {
     val locale = LocalLocale.current.platformLocale
     val dateFormat = remember(locale) { DateTimeFormatter.ofPattern("EEEE, d MMMM", locale) }
@@ -71,6 +73,18 @@ fun TodayScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(16.dp))
+            // The always-on notice is part of the promise, so the parent sees
+            // the same warning here as on the status screen.
+            if (!notificationsVisible) {
+                ProblemCard(
+                    severity = ProblemSeverity.Blocking,
+                    title = stringResource(R.string.problem_notice_title),
+                    body = stringResource(R.string.problem_notice_body),
+                    actionLabel = stringResource(R.string.problem_notice_action),
+                    onAction = onOpenNotificationSettings,
+                )
+                Spacer(Modifier.height(16.dp))
+            }
             when {
                 usage == null -> {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())

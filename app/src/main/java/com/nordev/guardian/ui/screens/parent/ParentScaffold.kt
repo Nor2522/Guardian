@@ -49,6 +49,7 @@ import com.nordev.guardian.data.web.BlocklistRepository
 import com.nordev.guardian.domain.block.PolicySnapshot
 import com.nordev.guardian.domain.web.WebFilterPolicy
 import com.nordev.guardian.service.admin.GuardianProtection
+import com.nordev.guardian.ui.components.rememberNotificationsVisible
 import com.nordev.guardian.ui.nav.Routes
 import com.nordev.guardian.ui.nav.ThemeMode
 import com.nordev.guardian.ui.theme.GuardianSpacing
@@ -76,6 +77,7 @@ fun ParentScaffold(
     showLockWarning: Boolean,
     usage: UsageSnapshot?,
     onOpenUsageSettings: () -> Unit,
+    onOpenNotificationSettings: () -> Unit,
     onTurnOnFilter: () -> Unit,
     onOpenVpnSettings: () -> Unit,
     onOpenNetworkSettings: () -> Unit,
@@ -99,6 +101,7 @@ fun ParentScaffold(
     val webFilter by remember(policyRepository) { policyRepository.webFilter }
         .collectAsState(initial = WebFilterPolicy.Default)
     val adultList = remember(context) { BlocklistRepository(context).adultList() }
+    val notificationsVisible = rememberNotificationsVisible()
 
     // The status review action lands on the affected tab. Today stays the
     // graph start so the bottom bar still clears back to the first tab.
@@ -138,6 +141,8 @@ fun ParentScaffold(
                     usage = usage,
                     onOpenSettings = { navController.navigate(Routes.PARENT_SETTINGS) },
                     onOpenUsageSettings = onOpenUsageSettings,
+                    notificationsVisible = notificationsVisible,
+                    onOpenNotificationSettings = onOpenNotificationSettings,
                 )
             }
             composable(Routes.PARENT_LIMITS) {

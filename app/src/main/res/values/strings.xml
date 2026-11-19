@@ -108,6 +108,9 @@
     <string name="perm_usage_reason">Shows screen time and makes daily limits work.</string>
     <string name="perm_notifications">Notifications</string>
     <string name="perm_notifications_reason">Shows the always-on protection notice.</string>
+    <string name="problem_notice_title">Protection notice is hidden</string>
+    <string name="problem_notice_body">Android can hide the ongoing notice. Protection may stop without it.</string>
+    <string name="problem_notice_action">Show notice</string>
     <string name="perm_accessibility">Accessibility</string>
     <string name="perm_accessibility_reason">Shows the pause screen when a limit or schedule applies.</string>
     <string name="perm_vpn">VPN filter</string>

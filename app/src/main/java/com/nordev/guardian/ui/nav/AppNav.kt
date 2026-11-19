@@ -195,6 +195,7 @@ fun GuardianNavHost(
                         pendingStatusTarget = target.name
                         navController.navigate(Routes.GATE)
                     },
+                    onOpenNotificationSettings = { launchNotificationSettings(context) },
                     usage = usage,
                 )
             }
@@ -325,6 +326,7 @@ fun GuardianNavHost(
                     showLockWarning = showLockWarning && isParentRoute,
                     usage = usage,
                     onOpenUsageSettings = { launchUsageAccessSettings(context) },
+                    onOpenNotificationSettings = { launchNotificationSettings(context) },
                     onTurnOnFilter = {
                         val consent = VpnService.prepare(context)
                         if (consent != null) {

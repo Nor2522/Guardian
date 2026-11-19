@@ -52,6 +52,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.nordev.guardian.R
 import com.nordev.guardian.data.permissions.AccessibilityAccessChecker
 import com.nordev.guardian.data.permissions.DeviceAdminAccessChecker
+import com.nordev.guardian.data.permissions.NotificationAccessChecker
 import com.nordev.guardian.data.permissions.UsageAccessChecker
 import com.nordev.guardian.data.prefs.ParentPinRepository
 import com.nordev.guardian.data.prefs.PolicyRepository
@@ -63,6 +64,8 @@ import com.nordev.guardian.ui.components.GuardianCard
 import com.nordev.guardian.ui.components.GuardianPrimaryButton
 import com.nordev.guardian.ui.components.IconBadge
 import com.nordev.guardian.ui.components.MetricCard
+import com.nordev.guardian.ui.components.ProblemCard
+import com.nordev.guardian.ui.components.ProblemSeverity
 import com.nordev.guardian.ui.components.ProtectionRow
 import com.nordev.guardian.ui.components.ProtectionState
 import com.nordev.guardian.ui.components.SectionHeader
@@ -84,6 +87,7 @@ private const val SLOW_TICK_MILLIS = 5_000L
 @Composable
 fun StatusScreen(
     onOpenGate: (StatusGateTarget) -> Unit,
+    onOpenNotificationSettings: () -> Unit,
     usage: UsageSnapshot?,
 ) {
     val context = LocalContext.current
@@ -92,6 +96,7 @@ fun StatusScreen(
     val settingsRepository = remember { SettingsRepository(context) }
     val usageChecker = remember { UsageAccessChecker(context) }
     val accessibilityChecker = remember { AccessibilityAccessChecker(context) }
+    val notificationChecker = remember { NotificationAccessChecker(context) }
     val adminChecker = remember { DeviceAdminAccessChecker(context) }
     val webStatusReader = remember { WebFilterStatusReader(context) }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -104,6 +109,7 @@ fun StatusScreen(
     var hasPin by remember { mutableStateOf<Boolean?>(null) }
     var usageGranted by remember { mutableStateOf(false) }
     var accessibilityGranted by remember { mutableStateOf(false) }
+    var notificationsGranted by remember { mutableStateOf(true) }
     var adminActive by remember { mutableStateOf(false) }
     var webStatus by remember { mutableStateOf(WebFilterStatus.Off) }
     var refreshToken by remember { mutableIntStateOf(0) }
@@ -127,6 +133,7 @@ fun StatusScreen(
         hasPin = pinRepository.state().hasPin
         usageGranted = usageChecker.isGranted()
         accessibilityGranted = accessibilityChecker.isGranted()
+        notificationsGranted = notificationChecker.isGranted()
         adminActive = adminChecker.isGranted()
         webStatus = webStatusReader.read(webFilter?.enabled == true)
     }
@@ -186,6 +193,19 @@ fun StatusScreen(
                 )
             }
             Spacer(Modifier.height(24.dp))
+            // The notice is the always-on proof of protection. When Android
+            // hides it the parent has no other sign, so say so here instead of
+            // leaving a green screen that overpromises.
+            if (overview != null && overview.hero != StatusHero.Off && !notificationsGranted) {
+                ProblemCard(
+                    severity = ProblemSeverity.Blocking,
+                    title = stringResource(R.string.problem_notice_title),
+                    body = stringResource(R.string.problem_notice_body),
+                    actionLabel = stringResource(R.string.problem_notice_action),
+                    onAction = onOpenNotificationSettings,
+                )
+                Spacer(Modifier.height(16.dp))
+            }
             if (overview == null) {
                 // Local reads finish in a frame or two. Keep the layout stable
                 // instead of guessing at a protection state.

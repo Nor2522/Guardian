@@ -147,6 +147,10 @@ class DnsFilterVpnService : VpnService() {
         val builder = Builder()
             .setSession(getString(R.string.filter_session_name))
             .setMtu(TUNNEL_MTU)
+            // establish() hands back a non-blocking descriptor by default, so an
+            // idle tunnel made the reader spin at a full core. Blocking reads
+            // cost nothing until a packet actually arrives.
+            .setBlocking(true)
             .addAddress(ADDRESS_V4, 32)
             .addDnsServer(DNS_V4)
             .addRoute(DNS_V4, 32)
@@ -160,6 +164,7 @@ class DnsFilterVpnService : VpnService() {
     private fun readLoop(descriptor: ParcelFileDescriptor) {
         val input = FileInputStream(descriptor.fileDescriptor)
         val buffer = ByteArray(MAX_PACKET)
+        var emptyReads = 0
         while (running) {
             val length = try {
                 input.read(buffer)
@@ -167,7 +172,27 @@ class DnsFilterVpnService : VpnService() {
                 if (running && BuildConfig.DEBUG) Log.d(TAG, "reader stopped: ${e.message}")
                 break
             }
-            if (length <= 0) continue
+            if (length <= 0) {
+                // The system builds the tunnel interface asynchronously, so the
+                // first reads can come back empty before any packet is attached.
+                // Give it a moment, then treat the descriptor as gone: an empty
+                // read never means "no packet yet", and spinning on one burned a
+                // full core while quietly dropping every query.
+                if (++emptyReads > EMPTY_READ_LIMIT) {
+                    if (running && BuildConfig.DEBUG) Log.d(TAG, "reader ended: read=$length")
+                    break
+                }
+                if (emptyReads == 1 && BuildConfig.DEBUG) {
+                    Log.d(TAG, "reader empty read, waiting for the tunnel")
+                }
+                try {
+                    Thread.sleep(EMPTY_READ_DELAY_MILLIS)
+                } catch (_: InterruptedException) {
+                    break
+                }
+                continue
+            }
+            emptyReads = 0
             val packet = IpPacket.parseUdp(buffer, length) ?: continue
             if (packet.destinationPort != DNS_PORT) continue
             if (!isTunnelDnsAddress(packet.destination)) continue
@@ -179,6 +204,10 @@ class DnsFilterVpnService : VpnService() {
             }
             dispatch(packet, question)
         }
+        // The reader is the filter. A dead reader with the switch still on would
+        // promise protection that is not there, so stop the tunnel and let the
+        // Web tab report Stopped until the next start.
+        if (running) stopFilter()
     }
 
     private fun dispatch(packet: UdpPacket, question: DnsQuestion) {
@@ -253,6 +282,8 @@ class DnsFilterVpnService : VpnService() {
         private const val CHANNEL_ID = "web_filter"
         private const val NOTIFICATION_ID = 43
         private const val DNS_PORT = 53
+        private const val EMPTY_READ_LIMIT = 20
+        private const val EMPTY_READ_DELAY_MILLIS = 100L
         private const val TUNNEL_MTU = 1500
         private const val IPV6_HEADER = 40
         private const val UDP_HEADER = 8
