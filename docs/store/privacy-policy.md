@@ -1,10 +1,10 @@
 # Guardian privacy policy (draft to host)
 
-Status: draft for the public URL. The in-app "Read the privacy policy" button
-and the Settings row open this page once it is published. Replace the two
-bracketed fields before hosting; nothing else below depends on the store listing.
+Status: published and verified. The in-app "Read the privacy policy" button and
+the Settings row open this page. One bracketed field remains: the contact
+address, until Nor supplies the official mailbox.
 
-Published at: `[PUBLIC URL]`
+Published at: https://nor2522.github.io/Guardian/site/
 Contact: `[CONTACT EMAIL]`
 Effective date: 19 November 2026
 

@@ -63,14 +63,14 @@ limits a parent sets on a child's phone. It shows a persistent notification whil
 protection runs and never hides what it does. It is not for monitoring another
 adult.
 
-Privacy policy: `[PUBLIC URL]`
+Privacy policy: https://nor2522.github.io/Guardian/site/
 
 ## Category and tags
 
 - Category: Parenting (alternative: Tools)
 - Tags: parental controls, screen time, app limits
 - Contact email: `[CONTACT EMAIL]`
-- Website: `[PUBLIC URL]`
+- Website: https://nor2522.github.io/Guardian/site/
 
 ## Graphics needed
 
@@ -88,7 +88,7 @@ must not show a child's name or real usage. Use a test profile.
 
 | Section | Answer |
 | --- | --- |
-| Privacy policy | `[PUBLIC URL]` |
+| Privacy policy | https://nor2522.github.io/Guardian/site/ |
 | Ads | No |
 | In-app purchases | No |
 | App access | All features testable after setup. Reviewers need the setup path: see the reviewer notes below |

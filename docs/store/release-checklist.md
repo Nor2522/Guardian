@@ -11,27 +11,30 @@ same track. For the first internal build, `1` / `1.0.0` is fine; bump
 
 ## 2. Upload keystore
 
-Create it once, outside the repo, and keep two backups:
+Created on 19 November 2026, outside the repo:
 
-```
-keytool -genkeypair -v \
-  -keystore ~/keys/guardian-upload.jks \
-  -alias guardian-upload \
-  -keyalg RSA -keysize 4096 -validity 10000 \
-  -dname "CN=Guardian, O=NorDev, C=SO"
-```
+| Field | Value |
+| --- | --- |
+| Keystore | `/home/nor/keys/guardian-upload.jks` |
+| Alias | `guardian-upload` |
+| Algorithm | RSA 4096, validity 10000 days, DN `CN=Guardian, O=NorDev, C=SO` |
+| Password | generated locally, stored only in `keystore.properties` |
 
-Do not commit the keystore, the password, or `keystore.properties`. Add both to
-`.gitignore` before the first signed build.
+Back up the `.jks` file **and** `keystore.properties` to two places Nor controls
+(password manager plus offline copy). Losing the upload key means a reset request
+to Google, and losing it before the first upload means a new app entry.
+
+Neither file is in the repo: `.gitignore` covers `keystore.properties`, `*.jks`,
+and `*.keystore`.
 
 ## 3. Signing config
 
-`app/build.gradle.kts` reads the keystore from `keystore.properties` (or
-environment variables) when the file exists, and leaves the release build
-unsigned otherwise, so a fresh clone still builds.
+`app/build.gradle.kts` reads `keystore.properties` at the project root and signs
+the release build when it exists; otherwise the release build stays unsigned so a
+clone still runs the tests.
 
 ```
-storeFile=...
+storeFile=/home/nor/keys/guardian-upload.jks
 storePassword=...
 keyAlias=guardian-upload
 keyPassword=...
@@ -82,8 +85,8 @@ Fix anything real, bump `versionCode`, upload again.
 
 ## 7. Before production
 
-- Privacy policy URL live, and the in-app `Read the privacy policy` button opens
-  it (code change: replace the summary dialog with an intent to the URL).
+- Privacy policy live at https://nor2522.github.io/Guardian/site/, and both in-app
+  links open it (wired: `openPrivacyPolicy`, browser with summary fallback).
 - Data safety submitted and consistent with `data-safety.md`.
 - Accessibility declaration submitted with the video.
 - Monitoring disclosure present in the description.
