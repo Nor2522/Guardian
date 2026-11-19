@@ -9,3 +9,8 @@ local.properties
 captures/
 .externalNativeBuild/
 .cxx/
+
+# Upload key material never enters the repo.
+keystore.properties
+*.jks
+*.keystore
