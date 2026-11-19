@@ -4,10 +4,10 @@ Ordered checklist for Step 11's build half. Each step says what proves it.
 
 ## 1. Version
 
-`app/build.gradle.kts` currently has `versionCode = 1`, `versionName = "0.1.0"`.
-Decide before the first upload: Play never lets a versionCode be reused on the
-same track. For the first internal build, `1` / `1.0.0` is fine; bump
-`versionCode` on every later upload.
+`app/build.gradle.kts` has `versionCode = 1`, `versionName = "1.0.0"`. The
+Settings → About row reads `BuildConfig.VERSION_NAME`, so it cannot drift from
+the Gradle value again. Play never lets a versionCode be reused on the same
+track: bump `versionCode` on every later upload.
 
 ## 2. Upload keystore
 
