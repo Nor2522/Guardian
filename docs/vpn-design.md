@@ -74,6 +74,27 @@ The parser is hand written for IPv4, IPv6, UDP, and the DNS question. A packet
 library would add size and a supply-chain dependency for about 300 lines of
 fixed-offset work.
 
+## Reader lifecycle
+
+`Builder.setBlocking(true)` is required, not cosmetic. `establish()` returns a
+non-blocking descriptor by default, so `read()` on an idle tunnel returns zero
+immediately and a plain `while (running) read()` loop spins at a full core and
+burns battery while answering nothing. With blocking mode the same thread
+sleeps in the kernel until a packet arrives.
+
+Empty reads still happen for a moment while the system attaches packets to a
+freshly built interface. The loop tolerates twenty of them at 100 ms each, then
+treats the descriptor as gone, logs `reader ended`, and stops the service. A
+dead reader with the switch still on would otherwise show a green "on" state
+that blocks nothing, so the loop calls `stopFilter()` on the way out and the Web
+tab reports Stopped until the next start.
+
+Measured on the SM-A155F before the fix: thread `guardian-dns-reader` at 100 %
+CPU, 21 minutes of CPU in 24 minutes of wall time, Guardian uid at 18.7 mAh of
+CPU inside a 6 minute idle window. After the fix, the same idle measurement over
+6 min 29 s shows the thread blocked in `read()` and the whole uid at 0.145 mAh
+(0.06 mAh CPU, 0.08 mAh radio), about 130 times less.
+
 ## Rules
 
 - Only destination port 53 to the tunnel addresses is handled. Anything else
@@ -104,6 +125,14 @@ off therefore sends an explicit `ACTION_STOP` to the running service, which
 closes the tunnel descriptor, removes the foreground notification, and stops
 itself. With no tunnel there is no notification: the Web tab's off card is the
 only "off" signal, not a lingering foreground notification.
+
+`BootReceiver` restores the other direction. The stored switch is a promise, so
+on `BOOT_COMPLETED` and on `MY_PACKAGE_REPLACED` it starts the filter again, but
+only when the switch is still on and `VpnService.prepare()` returns null. If the
+parent revoked VPN consent in system settings, the receiver does nothing and the
+Web tab's problem state stays honest instead of asking for consent from the
+background. Verified on the SM-A155F: `GuardianBoot: filter restored` after an
+`adb install -r` and again after `adb shell reboot`.
 
 ## System settings guard
 
