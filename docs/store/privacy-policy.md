@@ -1,11 +1,10 @@
 # Guardian privacy policy (draft to host)
 
 Status: published and verified. The in-app "Read the privacy policy" button and
-the Settings row open this page. One bracketed field remains: the contact
-address, until Nor supplies the official mailbox.
+the Settings row open this page.
 
 Published at: https://nor2522.github.io/Guardian/site/
-Contact: `[CONTACT EMAIL]`
+Contact: `noraliadan252@gmail.com`
 Effective date: 19 November 2026
 
 ---
@@ -81,4 +80,4 @@ that version ships and the in-app text is updated with it.
 
 ### Contact
 
-Questions about this policy: `[CONTACT EMAIL]`.
+Questions about this policy: `noraliadan252@gmail.com`.

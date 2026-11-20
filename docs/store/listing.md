@@ -69,7 +69,7 @@ Privacy policy: https://nor2522.github.io/Guardian/site/
 
 - Category: Parenting (alternative: Tools)
 - Tags: parental controls, screen time, app limits
-- Contact email: `[CONTACT EMAIL]`
+- Contact email: `noraliadan252@gmail.com`
 - Website: https://nor2522.github.io/Guardian/site/
 
 ## Graphics

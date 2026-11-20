@@ -9,11 +9,12 @@ The page is self-contained: no scripts, no fonts, no external assets, light and
 dark from the system setting. `docs/.nojekyll` stops Jekyll from processing the
 design documents that share the folder.
 
-## Before Play submission
+## Contact address
 
-Replace `[CONTACT EMAIL]` in `index.html` (and in `docs/store/privacy-policy.md`
-and `docs/store/listing.md`) with the official address once Nor provides it.
-Nothing else in the page is a placeholder.
+The policy page, `docs/store/privacy-policy.md`, and `docs/store/listing.md` all
+carry the same address, `noraliadan252@gmail.com`, in the page footer, the
+policy's Contact section, and the Play listing's contact email. If it changes,
+update all three together. Nothing else in the page is a placeholder.
 
 ## In the app
 
