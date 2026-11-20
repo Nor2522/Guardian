@@ -9,6 +9,10 @@ account, no Guardian server, no ads, and no analytics.
 **Current release: [v1.0.0](https://github.com/Nor2522/Guardian/releases/tag/v1.0.0)** —
 Android 8.0+ (API 26), `com.nordev.guardian`, versionCode 1.
 
+[Website](https://nor2522.github.io/Guardian/) ·
+[Download](https://github.com/Nor2522/Guardian/releases/latest) ·
+[Privacy policy](https://nor2522.github.io/Guardian/site/)
+
 ## Screenshots
 
 <table>

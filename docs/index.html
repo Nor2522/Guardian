@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardian — parental controls that run on the phone</title>
+<meta name="description" content="Guardian gives one Android phone daily app limits, bedtime and study schedules, and a DNS website filter. No account, no ads, no server. Free for Android 8.0 and up.">
+<link rel="canonical" href="https://nor2522.github.io/Guardian/">
+<meta name="theme-color" content="#F4FBF8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1513" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Guardian — parental controls that run on the phone">
+<meta property="og:description" content="Daily app limits, bedtime schedules, and a website filter for one Android phone. No account, no ads, no server.">
+<meta property="og:url" content="https://nor2522.github.io/Guardian/">
+<meta property="og:image" content="https://nor2522.github.io/Guardian/store/graphics/feature-graphic-1024x500.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #F4FBF8;
+    --glow: #9EF2E4;
+    --surface: #EEF6F2;
+    --surface-raised: #FFFFFF;
+    --border: #BFC9C5;
+    --text: #161D1B;
+    --muted: #3F4946;
+    --primary: #006A60;
+    --primary-strong: #00544C;
+    --on-primary: #FFFFFF;
+    --primary-container: #9EF2E4;
+    --on-primary-container: #00201C;
+    --accent-soft: #E3DFFF;
+    --code-bg: #E8F0EC;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0E1513;
+      --glow: #005048;
+      --surface: #1A211F;
+      --surface-raised: #232A28;
+      --border: #3F4946;
+      --text: #DDE4E1;
+      --muted: #BEC9C5;
+      --primary: #82D5C8;
+      --primary-strong: #A6E7DC;
+      --on-primary: #003731;
+      --primary-container: #005048;
+      --on-primary-container: #9EF2E4;
+      --accent-soft: #454263;
+      --code-bg: #1E2523;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; animation: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* Ambient wash, matching the app background: one fill, two static glows. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(48rem 32rem at 12% -8%, var(--glow), transparent 62%),
+      radial-gradient(40rem 28rem at 96% 8%, var(--accent-soft), transparent 60%);
+    opacity: .5;
+  }
+  @media (prefers-color-scheme: dark) {
+    body::before { opacity: .38; }
+  }
+
+  .wrap { width: min(1120px, 100% - 40px); margin-inline: auto; }
+
+  a { color: var(--primary); text-underline-offset: 2px; }
+  a:focus-visible,
+  summary:focus-visible,
+  .btn:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  h1, h2, h3 { margin: 0; line-height: 1.15; font-weight: 500; letter-spacing: -0.015em; }
+  h1 { font-size: clamp(2.1rem, 5.2vw, 3.5rem); }
+  h2 { font-size: clamp(1.5rem, 3vw, 2rem); }
+  h3 { font-size: 1.0625rem; line-height: 1.35; letter-spacing: 0; }
+  p { margin: 0; }
+  ul { margin: 0; padding-left: 1.15em; }
+  li { margin: 6px 0; }
+
+  .eyebrow {
+    font-size: .8125rem;
+    font-weight: 500;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .lede { font-size: clamp(1.0625rem, 1.6vw, 1.1875rem); color: var(--muted); }
+  .muted { color: var(--muted); }
+  .small { font-size: .9375rem; }
+
+  /* ---------- header ---------- */
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--bg);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-height: 68px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.0625rem;
+    letter-spacing: -0.01em;
+  }
+  .brand svg { display: block; }
+  .nav {
+    display: flex;
+    gap: 22px;
+    margin-left: auto;
+    font-size: .9375rem;
+  }
+  .nav a { color: var(--muted); text-decoration: none; }
+  .nav a:hover { color: var(--text); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 52px;
+    padding: 0 26px;
+    border-radius: 999px;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-strong), var(--primary));
+    color: var(--on-primary);
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-ghost {
+    border-color: var(--border);
+    color: var(--text);
+    background: transparent;
+  }
+  .btn-ghost:hover { background: var(--surface); }
+  .btn-sm { min-height: 44px; padding: 0 20px; font-size: .9375rem; }
+  .btn svg { flex: none; }
+
+  /* ---------- hero ---------- */
+
+  .hero { padding: clamp(48px, 7vw, 88px) 0 clamp(40px, 5vw, 64px); }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr .95fr;
+    gap: clamp(32px, 5vw, 64px);
+    align-items: center;
+  }
+  .hero-copy { display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+  .hero-copy .lede { max-width: 34ch; }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .chips li {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: .875rem;
+    color: var(--muted);
+  }
+  .chips li::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+  .fineprint { font-size: .875rem; color: var(--muted); }
+
+  .device {
+    justify-self: center;
+    width: min(310px, 78vw);
+    padding: 8px;
+    border-radius: 34px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    box-shadow: 0 24px 60px -32px rgba(0, 0, 0, .45);
+  }
+  .device img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 27px;
+  }
+
+  /* ---------- sections ---------- */
+
+  section { padding: clamp(48px, 6vw, 76px) 0; }
+  [id] { scroll-margin-top: 92px; }
+  .section-head { max-width: 62ch; display: flex; flex-direction: column; gap: 12px; margin-bottom: 36px; }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(272px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .card p { color: var(--muted); font-size: .9688rem; }
+
+  .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: var(--primary-container);
+    color: var(--on-primary-container);
+    margin-bottom: 4px;
+  }
+
+  /* ---------- screenshots ---------- */
+
+  .shots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    gap: 18px;
+  }
+  .shot { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .shot figcaption { font-size: .875rem; color: var(--muted); line-height: 1.4; }
+
+  /* ---------- steps ---------- */
+
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; counter-reset: step; }
+  .step { display: flex; flex-direction: column; gap: 8px; counter-increment: step; }
+  .step::before {
+    content: counter(step);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    font-size: .9375rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .step p { color: var(--muted); font-size: .9688rem; }
+
+  /* ---------- honesty ---------- */
+
+  .honest {
+    display: grid;
+    grid-template-columns: .9fr 1.1fr;
+    gap: clamp(24px, 4vw, 48px);
+    align-items: start;
+  }
+  .honest ul { margin-top: 4px; }
+  .honest li { margin: 10px 0; color: var(--muted); }
+  .honest li strong { color: var(--text); font-weight: 500; }
+
+  /* ---------- install ---------- */
+
+  .install-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: clamp(24px, 4vw, 40px);
+    display: grid;
+    grid-template-columns: 1.1fr .9fr;
+    gap: clamp(24px, 4vw, 48px);
+  }
+  .install-card h2 { margin-bottom: 12px; }
+  .install-body { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+  .checks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .checks li { display: flex; gap: 10px; margin: 0; font-size: .9688rem; color: var(--muted); }
+  .checks svg { flex: none; margin-top: 3px; color: var(--primary); }
+
+  pre {
+    margin: 0;
+    padding: 16px 18px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font: 400 .8125rem/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--text);
+  }
+  .hash-label { font-size: .8125rem; color: var(--muted); margin-bottom: 7px; }
+
+  .note {
+    border-left: 3px solid var(--primary);
+    padding: 2px 0 2px 14px;
+    font-size: .9375rem;
+    color: var(--muted);
+  }
+
+  /* ---------- faq ---------- */
+
+  .faq { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--border); }
+  details { border-bottom: 1px solid var(--border); }
+  summary {
+    cursor: pointer;
+    padding: 20px 2px;
+    font-weight: 500;
+    font-size: 1rem;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: "+";
+    font-size: 1.375rem;
+    color: var(--muted);
+    line-height: 1;
+    flex: none;
+  }
+  details[open] summary::after { content: "\2013"; }
+  details p { padding: 0 2px 22px; color: var(--muted); max-width: 68ch; }
+
+  /* ---------- footer ---------- */
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 0 56px;
+    font-size: .9375rem;
+    color: var(--muted);
+  }
+  .foot-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 32px;
+  }
+  .foot-grid h3 { font-size: .8125rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text); margin-bottom: 12px; }
+  .foot-grid ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .foot-grid li { margin: 0; }
+  .foot-grid a { color: var(--muted); text-decoration: none; }
+  .foot-grid a:hover { color: var(--text); text-decoration: underline; }
+  .legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); font-size: .875rem; line-height: 1.65; }
+
+  /* ---------- responsive ---------- */
+
+  @media (max-width: 900px) {
+    .hero-grid, .honest, .install-card { grid-template-columns: 1fr; }
+    .hero-grid { gap: 36px; }
+    .device { width: min(250px, 62vw); }
+    .foot-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 720px) {
+    .nav { display: none; }
+    .bar { min-height: 62px; }
+    .hero-copy .lede { max-width: none; }
+    .shots { grid-template-columns: 1fr 1fr; gap: 14px; }
+  }
+  @media (max-width: 520px) {
+    .foot-grid { grid-template-columns: 1fr; gap: 28px; }
+    .btn { width: 100%; }
+    .actions { width: 100%; }
+  }
+
+  /* Skip link */
+  .skip {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--primary);
+    color: var(--on-primary);
+    padding: 12px 18px;
+    border-radius: 0 0 10px 0;
+    z-index: 40;
+  }
+  .skip:focus { left: 0; }
+
+  @media print {
+    .site-header, .device, .actions, body::before { display: none; }
+    body { background: #fff; color: #000; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href="#top" aria-label="Guardian, back to top">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+        <path d="M12 2.5 4.5 5.6v6.1c0 4.6 3.2 8.6 7.5 9.8 4.3-1.2 7.5-5.2 7.5-9.8V5.6L12 2.5Z"
+              stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="m8.7 12.1 2.3 2.3 4.4-4.6" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Guardian
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#screens">Screens</a>
+      <a href="#install">Install</a>
+      <a href="#faq">Questions</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="https://github.com/Nor2522/Guardian/releases/latest">Download</a>
+  </div>
+</header>
+
+<main id="main">
+  <div id="top"></div>
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">Android 8.0 and up · Version 1.0.0</p>
+        <h1 id="hero-title">Limits that run on the phone itself.</h1>
+        <p class="lede">Guardian gives one Android phone daily app limits, bedtime and study
+          schedules, and a website filter. There is no account to create, no subscription,
+          and no server that watches your child.</p>
+        <ul class="chips">
+          <li>No account</li>
+          <li>No ads</li>
+          <li>No analytics</li>
+          <li>Nothing sent to us</li>
+        </ul>
+        <div class="actions">
+          <a class="btn btn-primary" href="https://github.com/Nor2522/Guardian/releases/latest">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+              <path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 20h16" stroke="currentColor"
+                    stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Download for Android
+          </a>
+          <a class="btn btn-ghost" href="https://nor2522.github.io/Guardian/site/">Read the privacy policy</a>
+        </div>
+        <p class="fineprint">Free · 14 MB · signed APK · Android 8.0 and up</p>
+      </div>
+
+      <div class="device">
+        <img src="store/graphics/screenshots/02-parent-today.png" width="1080" height="2140"
+             alt="Guardian parent screen showing 1 hour 29 minutes of screen time today, a seven-day bar chart, and a per-app list.">
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="features-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">What it does</p>
+        <h2 id="features-title">Six rules, one small app.</h2>
+        <p class="lede">Everything is enforced on the device. The child can always see that
+          protection is on, and the parent can always see what it is doing.</p>
+      </div>
+
+      <div class="grid-3">
+        <article class="card">
+          <span class="icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" focusable="false">
+              <circle cx="12" cy="12" r="8.4" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M12 7.4V12l3.2 2" stroke="currentColor" stroke-width="1.7"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <h3>Daily app limits</h3>
+          <p>Choose the time per app. When it runs out, Guardian shows a pause screen the child
+            cannot dismiss alone. Limits reset at midnight.</p>
+        </article>
+
+        <article class="card">
+          <span class="icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" focusable="false">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" stroke="currentColor"
+                    stroke-width="1.7" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <h3>Bedtime and study schedules</h3>
+          <p>Block everything except the apps you allow. Windows can cross midnight and overlap,
+            so school nights and homework hours can differ.</p>
+        </article>
+
+        <article class="card">
+          <span class="icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" focusable="false">
+              <circle cx="12" cy="12" r="8.4" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M3.8 12h16.4M12 3.6c2.3 2.3 3.4 5.2 3.4 8.4S14.3 18.1 12 20.4C9.7 18.1 8.6 15.2 8.6 12S9.7 5.9 12 3.6Z"
+                    stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <h3>Website filter</h3>
+          <p>A bundled adult-domain list plus the sites you add, resolved over encrypted DNS.
+            The local VPN carries DNS lookups and nothing else.</p>
+        </article>
+
+        <article class="card">
+          <span class="icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" focusable="false">
+              <path d="M4 20V11m5.3 9V5m5.4 15v-6.5M20 20V8.5" stroke="currentColor"
+                    stroke-width="1.9" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <h3>Screen time you can read</h3>
+          <p>Today and the last seven days, per app, taken from Android's own usage stats.
+            No separate tracking, no background collection.</p>
+        </article>
+
+        <article class="card">
+          <span class="icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" focusable="false">
+              <circle cx="8" cy="12" r="3.6" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M11.6 12H21m-3.2 0v3m-3-3v2.2" stroke="currentColor" stroke-width="1.7"
+                    stroke-linecap="round"/>
+            </svg>
+          </span>
+          <h3>Parent PIN</h3>
+          <p>Changing rules, opening the parent screens, or removing the app asks for the PIN.
+            It is stored only as a salted PBKDF2 hash.</p>
+        </article>
+
+        <article class="card">
+          <span class="icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" focusable="false">
+              <path d="M18 15.5V11a6 6 0 1 0-12 0v4.5L4.4 18h15.2L18 15.5Z" stroke="currentColor"
+                    stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="M10 18a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.7"
+                    stroke-linecap="round"/>
+            </svg>
+          </span>
+          <h3>Visible protection</h3>
+          <p>An always-on notification proves the checks are running, and the status screen names
+            any check that has quietly turned off.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="screens" aria-labelledby="screens-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Screens</p>
+        <h2 id="screens-title">The whole app, without the marketing gloss.</h2>
+        <p class="lede">These are the real screens from version 1.0.0. The two Today screens use
+          sample usage data; the rest show a phone with the real configuration.</p>
+      </div>
+
+      <div class="shots">
+        <figure class="shot">
+          <img src="store/graphics/screenshots/01-today-child.png" width="1080" height="2140" loading="lazy"
+               alt="Child view: Guardian is on, with screen time today and a list of protection checks.">
+          <figcaption>Child view — protection status and time used</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="store/graphics/screenshots/03-limits.png" width="1080" height="2140" loading="lazy"
+               alt="Limits screen listing apps with daily limits and the time remaining.">
+          <figcaption>Daily limits, per app</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="store/graphics/screenshots/04-schedules.png" width="1080" height="2140" loading="lazy"
+               alt="Schedules screen with a bedtime window and the apps it pauses.">
+          <figcaption>Bedtime and study windows</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="store/graphics/screenshots/05-web.png" width="1080" height="2140" loading="lazy"
+               alt="Website filter screen showing the filter switch, blocked sites, and the adult list version.">
+          <figcaption>Website filter and blocked sites</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="store/graphics/screenshots/06-settings.png" width="1080" height="2140" loading="lazy"
+               alt="Parent settings with theme, PIN changes, and the About row showing version 1.0.0.">
+          <figcaption>Parent settings</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="store/graphics/screenshots/02-parent-today.png" width="1080" height="2140" loading="lazy"
+               alt="Parent view: today's screen time, a seven-day chart, and per-app totals.">
+          <figcaption>Parent view — today and the week</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="setup-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Setup</p>
+        <h2 id="setup-title">Three steps, about five minutes.</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <h3>Install the app</h3>
+          <p>Download the APK, allow your browser to install it when Android asks, then switch that
+            permission back off if you prefer.</p>
+        </div>
+        <div class="step">
+          <h3>Grant the checks</h3>
+          <p>Usage access, Accessibility, the local VPN, notifications, and Device Admin for uninstall
+            protection. Each one is explained before the system screen opens.</p>
+        </div>
+        <div class="step">
+          <h3>Set the rules</h3>
+          <p>Limits, schedules, and blocked sites, behind the parent PIN. The child sees that
+            protection is on, so the rule never looks like a secret.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="honest-title">
+    <div class="wrap honest">
+      <div>
+        <p class="eyebrow">Limits of a DNS filter</p>
+        <h2 id="honest-title">What Guardian cannot do.</h2>
+        <p class="lede" style="margin-top:12px">Read this before you install. A parental-control app
+          that promises everything is selling you something.</p>
+      </div>
+      <ul>
+        <li><strong>A DNS filter cannot see inside HTTPS.</strong> Apps and browsers that use their
+          own encrypted DNS, or connect to a hardcoded IP address, can get around it.</li>
+        <li><strong>Quick Settings can switch the VPN off.</strong> Guardian can gate the system VPN
+          screen behind the PIN, but not every path to that switch.</li>
+        <li><strong>No filter is perfect.</strong> The adult list plus your own blocked sites catches
+          a great deal, not everything.</li>
+        <li><strong>It is not a spy app.</strong> Guardian does not read messages, photos, passwords,
+          or keystrokes, and does not use the camera, microphone, or location. It shows a permanent
+          notification while it runs, and it is meant for a parent managing a child's phone.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="install" aria-labelledby="install-title">
+    <div class="wrap">
+      <div class="install-card">
+        <div class="install-body">
+          <p class="eyebrow">Install</p>
+          <h2 id="install-title">Free, direct from the release page.</h2>
+          <p class="muted">Signed with the project's release key. Installing a newer version over an
+            older one keeps your PIN, rules, and usage data.</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="https://github.com/Nor2522/Guardian/releases/download/v1.0.0/Guardian-1.0.0.apk">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                <path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 20h16" stroke="currentColor"
+                      stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Guardian-1.0.0.apk
+            </a>
+            <a class="btn btn-ghost" href="https://github.com/Nor2522/Guardian/releases/tag/v1.0.0">Release notes</a>
+          </div>
+          <p class="note">Not on Google Play yet. The signed bundle is prepared for the internal
+            testing track, so the only download today is the APK above. Play Protect may warn about
+            apps from outside the store — check the fingerprint first, then install anyway.</p>
+        </div>
+
+        <div>
+          <p class="hash-label">SHA-256 of the APK</p>
+          <pre>4477d391d299d4d36e1c1ef1385e0f35beb61f69f943bd62da0d5b8c9749f559</pre>
+          <p class="hash-label" style="margin-top:18px">Signing certificate (SHA-256)</p>
+          <pre>BB:8E:AA:B0:27:F9:29:FA:B4:1B:B1:86:B0:4D:29:58:07:62:8D:CE:4E:E4:B6:50:75:1C:8C:F5:D9:77:A2:69</pre>
+          <ul class="checks" style="margin-top:20px">
+            <li>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                <path d="m5 12.6 4.3 4.4L19 6.5" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Android 8.0 or newer, any phone
+            </li>
+            <li>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                <path d="m5 12.6 4.3 4.4L19 6.5" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              No account, no sign-up, no in-app purchases
+            </li>
+            <li>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                <path d="m5 12.6 4.3 4.4L19 6.5" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Uninstalling or clearing data deletes everything
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" aria-labelledby="faq-title">
+    <div class="wrap" style="max-width:840px">
+      <div class="section-head">
+        <p class="eyebrow">Questions</p>
+        <h2 id="faq-title">The ones parents actually ask.</h2>
+      </div>
+
+      <div class="faq">
+        <details>
+          <summary>Is it really free?</summary>
+          <p>Yes. No subscription, no ads, no in-app purchases, and no paid tier. There is nothing
+            to sign in to, so there is nothing to bill.</p>
+        </details>
+        <details>
+          <summary>Can my child uninstall it?</summary>
+          <p>With uninstall protection on, removing Guardian requires the parent PIN. Turning that
+            protection off in Android settings is also gated behind the PIN. A factory reset always
+            removes it, as it removes everything else.</p>
+        </details>
+        <details>
+          <summary>Does it work on iPhone?</summary>
+          <p>No. Guardian is Android only, for phones running Android 8.0 or newer.</p>
+        </details>
+        <details>
+          <summary>Will it slow the phone down?</summary>
+          <p>The local VPN carries DNS lookups only — roughly the first request for each site, not
+            your browsing traffic. Guardian does not proxy, inspect, or log other traffic, and it
+            keeps no browsing history. Normal browsing speed is not affected by the tunnel beyond
+            that first lookup.</p>
+        </details>
+        <details>
+          <summary>What happens when the filter's DNS server is unreachable?</summary>
+          <p>Lookups fail instead of quietly resolving unfiltered. That is deliberate: a blocked
+            site should not become reachable because the resolver had a bad day.</p>
+        </details>
+        <details>
+          <summary>Where is my child's data kept?</summary>
+          <p>On the phone, in the app's private storage: usage figures, rules, schedules, blocked
+            sites, and the PIN hash. There is no server copy, because there is no server. The only
+            thing that leaves the phone is the domain names looked up while the filter is on, sent
+            over encrypted DNS to CleanBrowsing's Family resolver.</p>
+        </details>
+        <details>
+          <summary>Can I use it to monitor another adult?</summary>
+          <p>No. Guardian is built for a parent managing a child's phone. It shows a permanent
+            notification while it runs and never hides itself, so the person using the phone can
+            always tell that it is there.</p>
+        </details>
+        <details>
+          <summary>How do updates work?</summary>
+          <p>Install the newer APK over the old one. Because it is signed with the same key, your
+            PIN, rules, and usage data stay in place.</p>
+        </details>
+        <details>
+          <summary>Is the source available?</summary>
+          <p>Yes, the full Android project is public:
+            <a href="https://github.com/Nor2522/Guardian">github.com/Nor2522/Guardian</a>.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="#top" style="margin-bottom:12px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+            <path d="M12 2.5 4.5 5.6v6.1c0 4.6 3.2 8.6 7.5 9.8 4.3-1.2 7.5-5.2 7.5-9.8V5.6L12 2.5Z"
+                  stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="m8.7 12.1 2.3 2.3 4.4-4.6" stroke="currentColor" stroke-width="1.7"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Guardian
+        </a>
+        <p class="small">Parental controls for one Android phone, running on that phone.
+          Version 1.0.0.</p>
+      </div>
+      <div>
+        <h3>App</h3>
+        <ul>
+          <li><a href="https://github.com/Nor2522/Guardian/releases/latest">Download</a></li>
+          <li><a href="https://github.com/Nor2522/Guardian/releases/tag/v1.0.0">Release notes</a></li>
+          <li><a href="https://github.com/Nor2522/Guardian">Source code</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Privacy</h3>
+        <ul>
+          <li><a href="https://nor2522.github.io/Guardian/site/">Privacy policy</a></li>
+          <li><a href="mailto:noraliadan252@gmail.com">noraliadan252@gmail.com</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="legal">
+      Guardian is an independent project, not affiliated with Google or CleanBrowsing. The website
+      filter uses CleanBrowsing's free Family DNS resolver. The adult-domain list is derived from
+      <a href="https://github.com/StevenBlack/hosts">StevenBlack/hosts</a>. Guardian does not read messages,
+      photos, passwords, or keystrokes, and does not use the camera, microphone, or location.
+      No filter is perfect.
+    </p>
+  </div>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Guardian",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Android 8.0 or newer",
+  "softwareVersion": "1.0.0",
+  "url": "https://nor2522.github.io/Guardian/",
+  "downloadUrl": "https://github.com/Nor2522/Guardian/releases/latest",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+</body>
+</html>

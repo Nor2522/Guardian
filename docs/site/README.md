@@ -5,6 +5,15 @@ Live at **https://nor2522.github.io/Guardian/site/**, served from
 `https://github.com/Nor2522/Guardian`. Verified 19 November 2026: loads without a
 login, valid certificate, no requests besides the page itself.
 
+## Landing page
+
+The marketing page lives one level up, at `docs/index.html`, and is served at
+**https://nor2522.github.io/Guardian/**. It reuses the app's palette from
+`docs/design.md`, has no scripts and no external assets, and pulls the six
+screenshots from `docs/store/graphics/screenshots/`. Keep the claims on it in
+step with this policy: if the policy changes what leaves the phone, the landing
+page's FAQ and limitations sections change with it.
+
 The page is self-contained: no scripts, no fonts, no external assets, light and
 dark from the system setting. `docs/.nojekyll` stops Jekyll from processing the
 design documents that share the folder.
